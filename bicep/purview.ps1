@@ -106,7 +106,7 @@ function putScan([string]$token, [string]$dataSourceName, [hashtable]$payload) {
     Return $response
 }
 
-# Run Scan
+# [PUT] Run Scan
 function runScan([string]$token, [string]$dataSourceName, [string]$scanName) {
     $guid = New-Guid
     $runId = $guid.guid
