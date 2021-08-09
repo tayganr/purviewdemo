@@ -1,4 +1,17 @@
-param([string]$tenant_id, [string]$client_id, [string]$client_secret, [string]$purview_account, [string]$vault_uri)
+param(
+    [string]$tenant_id,
+    [string]$client_id,
+    [string]$client_secret,
+    [string]$purview_account,
+    [string]$vault_uri,
+    [string]$admin_login,
+    [string]$sql_secret_name,
+    [string]$subscription_id,
+    [string]$resource_group,
+    [string]$location,
+    [string]$sql_server_name,
+    [string]$sql_db_name
+)
 
 # 1. Key Vault Connection
 # 2. Credential
@@ -94,7 +107,7 @@ function putScan([string]$token, [string]$dataSourceName, [hashtable]$payload) {
 }
 
 # Run Scan
-function runScan([string]$dataSourceName, [string]$scanName) {
+function runScan([string]$token, [string]$dataSourceName, [string]$scanName) {
     $guid = New-Guid
     $runId = $guid.guid
     $uri = "${scan_endpoint}/datasources/${dataSourceName}/scans/${scanName}/runs/${runId}?api-version=2018-12-01-preview"
@@ -108,6 +121,7 @@ function runScan([string]$dataSourceName, [string]$scanName) {
 }
 
 # 1. Get Access Token
+Write-Output "[INFO] Getting Access Token..."
 $token = getToken $tenant_id $client_id $client_secret
 
 # 2. Create a Key Vault Connection
@@ -117,6 +131,7 @@ $vault_payload = @{
         description = ""
     }
 }
+Write-Output "[INFO] Creating Azure Key Vault Connection..."
 $vault = putVault $token $vault_payload
 
 # 3. Create a Credential
@@ -127,7 +142,7 @@ $credential_payload = @{
         type = "SqlAuth"
         typeProperties = @{
             password = @{
-                secretName = "sql-secret"
+                secretName = $sql_secret_name
                 secretVersion = ""
                 store = @{
                     referenceName = $vault.name
@@ -135,11 +150,12 @@ $credential_payload = @{
                 }
                 type = "AzureKeyVaultSecret"
             }
-            user = "sqladmin"
+            user = $admin_login
         }
     }
     type = "Microsoft.Purview/accounts/credentials"
 }
+Write-Output "[INFO] Creating Azure Purview Credential..."
 putCredential $token $credential_payload
 
 # 4. Create a Source
@@ -149,14 +165,15 @@ $source_payload = @{
     name = "AzureSqlDatabase"
     properties = @{
         collection = ""
-        location = "uksouth"
+        location = $location
         parentCollection = ""
-        resourceGroup = "sandbox"
-        resourceName = "pvdemo04831-sqlsvr"
-        serverEndpoint = "pvdemo04831-sqlsvr.database.windows.net"
-        subscriptionId = "2c334b6c-e556-40ac-a4c0-c0d1d2e08ca0"
+        resourceGroup = $resource_group
+        resourceName = $sql_server_name
+        serverEndpoint = "${sql_server_name}.database.windows.net"
+        subscriptionId = $subscription_id
     }
 }
+Write-Output "[INFO] Creating Data Source..."
 putSource $token $source_payload
 
 # 5. Create a Scan Configuration
@@ -166,16 +183,19 @@ $scan_payload = @{
     kind = "AzureSqlDatabaseCredential"
     name = $scanName
     properties = @{
-        databaseName = "pvdemo04831-sqldb"
+        databaseName = $sql_db_name
         scanRulesetName = "AzureSqlDatabase"
         scanRulesetType = "System"
-        serverEndpoint = "pvdemo04831-sqlsvr.database.windows.net"
+        serverEndpoint = "${sql_server_name}.database.windows.net"
         credential = @{
             credentialType = "SqlAuth"
-            referenceName = "sql-cred"
+            referenceName = $credential_payload.name
         }
     }
 }
-putScan $token "AzureSqlDatabase" $scan_payload
+Write-Output "[INFO] Creating Scan Configuration..."
+putScan $token $source_payload.name $scan_payload
 
 # 6. Trigger Scan
+Write-Output "[INFO] Triggering Scan Run..."
+runScan $token $source_payload.name $scan_payload.name

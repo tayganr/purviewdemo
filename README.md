@@ -1,4 +1,4 @@
 # purviewdemo
 Azure Purview Demo Generator
 
-`az deployment group create -g "sandbox" -f ./bicep/purview.bicep -p ./bicep/purview.parameters.json`
+`az deployment group create -g demo -f azuredeploy.bicep -p parameters.json `

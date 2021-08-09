@@ -3,7 +3,8 @@ param objectId string       // Azure AD (Current User)
 param clientId string       // CLIENT_ID
 param clientSecret string   // CLIENT_SECRET
 param spObjectId string     // OBJECT_ID
-param adminLogin string
+param adminLogin string = 'sqladmin'
+param sqlSecretName string = 'sql-secret'
 param suffix string = utcNow('ssfff')
 param timestamp string = utcNow()
 param roleNameGuid1 string = newGuid()
@@ -13,6 +14,7 @@ param adminPassword string = newGuid()
 
 // Variables
 var location = resourceGroup().location
+var rg = resourceGroup().name
 var subscriptionId = subscription().subscriptionId
 var tenantId = subscription().tenantId
 var roleDefinitionPrefix = '/subscriptions/${subscriptionId}/providers/Microsoft.Authorization/roleDefinitions'
@@ -35,7 +37,7 @@ resource pv 'Microsoft.Purview/accounts@2020-12-01-preview' = {
   }
 }
 
-// Assign Purview RBAC roles to Service Principal
+// Assign Purview Data Curator RBAC role to Service Principal
 resource roleAssignment1 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
   name: roleNameGuid1
   scope: pv
@@ -46,7 +48,7 @@ resource roleAssignment1 'Microsoft.Authorization/roleAssignments@2020-08-01-pre
   }
 }
 
-// Assign Purview RBAC roles to Service Principal
+// Assign Purview Data Source Administrator RBAC role to Service Principal
 resource roleAssignment2 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
   name: roleNameGuid2
   scope: pv
@@ -140,7 +142,7 @@ resource kv 'Microsoft.KeyVault/vaults@2021-04-01-preview' = {
     ]
   }
   resource secret 'secrets' = {
-    name: 'sql-secret'
+    name: sqlSecretName
     properties: {
       value: adminPassword
     }
@@ -150,11 +152,11 @@ resource kv 'Microsoft.KeyVault/vaults@2021-04-01-preview' = {
 // Data Plane Operations
 resource script 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   name: 'script'
-  location: resourceGroup().location
+  location: location
   kind: 'AzurePowerShell'
   properties: {
     azPowerShellVersion: '3.0'
-    arguments: '-tenant_id ${tenantId} -client_id ${clientId} -client_secret ${clientSecret} -purview_account ${pv.name} -vault_uri ${kv.properties.vaultUri}'
+    arguments: '-tenant_id ${tenantId} -client_id ${clientId} -client_secret ${clientSecret} -purview_account ${pv.name} -vault_uri ${kv.properties.vaultUri} -admin_login ${adminLogin} -sql_secret_name ${sqlSecretName} -subscription_id ${subscriptionId} -resource_group ${rg} -location ${location} -sql_server_name ${sqlsvr.name} -sql_db_name ${sqldb.name}'
     scriptContent: loadTextContent('purview.ps1')
     forceUpdateTag: timestamp // script will run every time
     retentionInterval: 'PT4H' // deploymentScript resource will delete itself in 4 hours
