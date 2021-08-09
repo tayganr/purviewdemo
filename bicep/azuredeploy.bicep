@@ -167,7 +167,7 @@ resource adls 'Microsoft.Storage/storageAccounts@2021-04-01' = {
 // Assign Storage Blob Data Reader RBAC role to Azure Purview MI
 resource roleAssignment3 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
   name: roleNameGuid3
-  scope: pv
+  scope: adls
   properties: {
     principalId: pv.identity.principalId
     roleDefinitionId: role['StorageBlobDataReader']
