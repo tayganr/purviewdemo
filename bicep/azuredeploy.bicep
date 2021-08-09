@@ -9,11 +9,12 @@ param suffix string = utcNow('ssfff')
 param timestamp string = utcNow()
 param roleNameGuid1 string = newGuid()
 param roleNameGuid2 string = newGuid()
+param roleNameGuid3 string = newGuid()
+param location string = resourceGroup().location
 @secure()
 param adminPassword string = newGuid()
 
 // Variables
-var location = resourceGroup().location
 var rg = resourceGroup().name
 var subscriptionId = subscription().subscriptionId
 var tenantId = subscription().tenantId
@@ -22,6 +23,7 @@ var role = {
   PurviewDataCurator: '${roleDefinitionPrefix}/8a3c2885-9b38-4fd2-9d99-91af537c1347'
   PurviewDataReader: '${roleDefinitionPrefix}/ff100721-1b9d-43d8-af52-42b69c1272db'
   PurviewDataSourceAdministrator: '${roleDefinitionPrefix}/200bba9e-f0c8-430f-892b-6f0794863803'
+  StorageBlobDataReader: '${roleDefinitionPrefix}/2a2b9908-6ea1-4ae2-8e65-a410df84e7d1'
 }
 
 // Azure Purview Account
@@ -146,6 +148,30 @@ resource kv 'Microsoft.KeyVault/vaults@2021-04-01-preview' = {
     properties: {
       value: adminPassword
     }
+  }
+}
+
+// Azure Storage Account
+resource adls 'Microsoft.Storage/storageAccounts@2021-04-01' = {
+  name: 'pvdemo${suffix}adls'
+  location: location
+  kind: 'StorageV2'
+  sku: {
+    name: 'Standard_LRS'
+  }
+  properties: {
+    isHnsEnabled: true
+  }
+}
+
+// Assign Storage Blob Data Reader RBAC role to Azure Purview MI
+resource roleAssignment3 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
+  name: roleNameGuid3
+  scope: pv
+  properties: {
+    principalId: pv.identity.principalId
+    roleDefinitionId: role['StorageBlobDataReader']
+    principalType: 'ServicePrincipal'
   }
 }
 
