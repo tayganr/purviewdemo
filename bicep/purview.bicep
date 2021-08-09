@@ -1,4 +1,6 @@
-// az deployment group create -g "sandbox" -f ./bicep/bicep.bicep 
+// az deployment group create -g "sandbox" -f ./bicep/purview.bicep -p ./bicep/purviewparameters.json
+
+// Parameters
 param objectId string       // Azure AD (Current User)
 param clientId string       // CLIENT_ID
 param clientSecret string   // CLIENT_SECRET
@@ -8,12 +10,14 @@ param suffix string = utcNow('ssfff')
 param timestamp string = utcNow()
 param roleNameGuid1 string = newGuid()
 param roleNameGuid2 string = newGuid()
-var location = resourceGroup().location
-var tenantId = subscription().tenantId
 @secure()
 param adminPassword string = newGuid()
 
-var roleDefinitionPrefix = '/subscriptions/${subscription().subscriptionId}/providers/Microsoft.Authorization/roleDefinitions'
+// Variables
+var location = resourceGroup().location
+var subscriptionId = subscription().subscriptionId
+var tenantId = subscription().tenantId
+var roleDefinitionPrefix = '/subscriptions/${subscriptionId}/providers/Microsoft.Authorization/roleDefinitions'
 var role = {
   PurviewDataCurator: '${roleDefinitionPrefix}/8a3c2885-9b38-4fd2-9d99-91af537c1347'
   PurviewDataReader: '${roleDefinitionPrefix}/ff100721-1b9d-43d8-af52-42b69c1272db'
