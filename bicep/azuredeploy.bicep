@@ -162,5 +162,3 @@ resource script 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
     retentionInterval: 'PT4H' // deploymentScript resource will delete itself in 4 hours
   }
 }
-
-// output scriptOutput string = script.properties.outputs.putSource
