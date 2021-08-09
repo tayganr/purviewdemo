@@ -49,7 +49,7 @@ function putSource([string]$token, [hashtable]$payload) {
 
 # [PUT] Key Vault
 function putVault([string]$token, [hashtable]$payload) {
-    $randomId = -join (((48..57)+(65..90)+(97..122)) * 80 |Get-Random -Count 3 |%{[char]$_})
+    $randomId = -join (((48..57)+(65..90)+(97..122)) * 80 |Get-Random -Count 3 |ForEach-Object{[char]$_})
     $keyVaultName = "keyVault-${randomId}"
     $uri = "${scan_endpoint}/azureKeyVaults/${keyVaultName}"
     $params = @{
@@ -160,7 +160,7 @@ $source_payload = @{
 putSource $token $source_payload
 
 # 5. Create a Scan Configuration
-$randomId = -join (((48..57)+(65..90)+(97..122)) * 80 |Get-Random -Count 3 |%{[char]$_})
+$randomId = -join (((48..57)+(65..90)+(97..122)) * 80 |Get-Random -Count 3 |ForEach-Object{[char]$_})
 $scanName = "Scan-${randomId}"
 $scan_payload = @{
     kind = "AzureSqlDatabaseCredential"
