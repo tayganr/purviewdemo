@@ -1,5 +1,3 @@
-// az deployment group create -g "sandbox" -f ./bicep/purview.bicep -p ./bicep/purviewparameters.json
-
 // Parameters
 param objectId string       // Azure AD (Current User)
 param clientId string       // CLIENT_ID
