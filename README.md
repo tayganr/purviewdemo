@@ -1,9 +1,9 @@
-# purviewdemo
+# Azure Purview Demo Environment
 
 
 ## Get Started
 
-`az deployment group create -g demo -f azuredeploy.bicep -p parameters.json `
+`az deployment group create -g YOUR_RESOURCE_GROUP -f azuredeploy.bicep -p parameters.json `
 
 ## Resources
 
@@ -22,3 +22,12 @@
 | Microsoft.Authorization | roleAssignments | Purview Data Curator > Service Principal |
 | Microsoft.Authorization | roleAssignments | Purview Data Source Administrator > Service Principal|
 | Microsoft.Authorization | roleAssignments | Storage Blob Data Reader > Azure Purview MI |
+
+## Post Deployment Script
+
+1. Get Access Token
+2. Create Azure Key Vault Connection
+3. Create Credential
+4. Create Source (Azure SQL Database)
+5. Create Scan
+6. Run Scan
