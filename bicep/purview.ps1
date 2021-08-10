@@ -10,7 +10,8 @@ param(
     [string]$resource_group,
     [string]$location,
     [string]$sql_server_name,
-    [string]$sql_db_name
+    [string]$sql_db_name,
+    [string]$storage_account_name
 )
 
 # 1. Key Vault Connection
@@ -158,8 +159,8 @@ $credential_payload = @{
 Write-Output "[INFO] Creating Azure Purview Credential..."
 putCredential $token $credential_payload
 
-# 4. Create a Source
-$source_payload = @{
+# 4. Create a Source (Azure SQL Database)
+$source_sqldb_payload = @{
     id = "datasources/AzureSqlDatabase"
     kind = "AzureSqlDatabase"
     name = "AzureSqlDatabase"
@@ -174,12 +175,12 @@ $source_payload = @{
     }
 }
 Write-Output "[INFO] Creating Data Source..."
-putSource $token $source_payload
+putSource $token $source_sqldb_payload
 
 # 5. Create a Scan Configuration
 $randomId = -join (((48..57)+(65..90)+(97..122)) * 80 |Get-Random -Count 3 |ForEach-Object{[char]$_})
 $scanName = "Scan-${randomId}"
-$scan_payload = @{
+$scan_sqldb_payload = @{
     kind = "AzureSqlDatabaseCredential"
     name = $scanName
     properties = @{
@@ -194,8 +195,51 @@ $scan_payload = @{
     }
 }
 Write-Output "[INFO] Creating Scan Configuration..."
-putScan $token $source_payload.name $scan_payload
+putScan $token $source_sqldb_payload.name $scan_sqldb_payload
 
 # 6. Trigger Scan
 Write-Output "[INFO] Triggering Scan Run..."
-runScan $token $source_payload.name $scan_payload.name
+runScan $token $source_sqldb_payload.name $scan_sqldb_payload.name
+
+# 7. Load Storage Account with Sample Data
+$storageAccount = Get-AzStorageAccount -ResourceGroupName $resource_group -Name $storage_account_name
+$RepoUrl = 'https://api.github.com/repos/nytimes/covid-19-data/zipball/master'
+Invoke-RestMethod -Uri $RepoUrl -OutFile "repo.zip"
+Expand-Archive -Path "repo.zip"
+Set-Location -Path "repo"
+Get-ChildItem -File -Recurse | Set-AzStorageBlobContent -Container "data" -Context $storageAccount.Context
+
+# 8. Create a Source (ADLS Gen2)
+$source_adls_payload = @{
+    id = "datasources/AzureDataLakeStorage"
+    kind = "AdlsGen2"
+    name = "AzureDataLakeStorage"
+    properties = @{
+        collection = ""
+        location = $location
+        parentCollection = ""
+        resourceGroup = $resource_group
+        resourceName = $storage_account_name
+        subscriptionId = $subscription_id
+    }
+}
+Write-Output "[INFO] Creating Data Source..."
+putSource $token $source_adls_payload
+
+# 9. Create a Scan Configuration
+$randomId = -join (((48..57)+(65..90)+(97..122)) * 80 |Get-Random -Count 3 |ForEach-Object{[char]$_})
+$scanName = "Scan-${randomId}"
+$scan_adls_payload = @{
+    kind = "AdlsGen2Msi"
+    name = $scanName
+    properties = @{
+        scanRulesetName = "AdlsGen2"
+        scanRulesetType = "System"
+    }
+}
+Write-Output "[INFO] Creating Scan Configuration..."
+putScan $token $source_adls_payload.name $scan_adls_payload
+
+# 10. Trigger Scan
+Write-Output "[INFO] Triggering Scan Run..."
+runScan $token $source_adls_payload.name $scan_adls_payload.name

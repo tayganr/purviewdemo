@@ -19,15 +19,24 @@
 | Microsoft.KeyVault | vaults/accessPolicies | Azure Purview MI |
 | Microsoft.KeyVault | vaults/secret | Azure SQL DB Admin Password|
 | Microsoft.Storage | storageAccounts | |
+| Microsoft.Storage | storageAccounts/blobServices | |
+| Microsoft.Storage | storageAccounts/blobServices/containers | |
+| Microsoft.ManagedIdentity | userAssignedIdentities | |
 | Microsoft.Authorization | roleAssignments | Purview Data Curator > Service Principal |
 | Microsoft.Authorization | roleAssignments | Purview Data Source Administrator > Service Principal|
 | Microsoft.Authorization | roleAssignments | Storage Blob Data Reader > Azure Purview MI |
+| Microsoft.Authorization | roleAssignments | Contributor > userAssignIdentity |
+| Microsoft.Resources | deploymentScripts | |
 
 ## Post Deployment Script
 
 1. Get Access Token
 2. Create Azure Key Vault Connection
 3. Create Credential
-4. Create Source (Azure SQL Database)
-5. Create Scan
-6. Run Scan
+4. Azure SQL Database: Register Source
+5. Azure SQL Database: Create Scan
+6. Azure SQL Database: Run Scan
+7. Azure Data Lake Storage Gen2: Load Sample Data
+8. Azure Data Lake Storage Gen2: Register Source
+9. Azure Data Lake Storage Gen2: Create Scan
+10. Azure Data Lake Storage Gen2: Run Scan

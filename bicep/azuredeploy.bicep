@@ -10,6 +10,7 @@ param timestamp string = utcNow()
 param roleNameGuid1 string = newGuid()
 param roleNameGuid2 string = newGuid()
 param roleNameGuid3 string = newGuid()
+param roleNameGuid4 string = newGuid()
 param location string = resourceGroup().location
 @secure()
 param adminPassword string = newGuid()
@@ -24,6 +25,7 @@ var role = {
   PurviewDataReader: '${roleDefinitionPrefix}/ff100721-1b9d-43d8-af52-42b69c1272db'
   PurviewDataSourceAdministrator: '${roleDefinitionPrefix}/200bba9e-f0c8-430f-892b-6f0794863803'
   StorageBlobDataReader: '${roleDefinitionPrefix}/2a2b9908-6ea1-4ae2-8e65-a410df84e7d1'
+  Contributor: '${roleDefinitionPrefix}/b24988ac-6180-42a0-ab88-20f7382dd24c'
 }
 
 // Azure Purview Account
@@ -162,6 +164,21 @@ resource adls 'Microsoft.Storage/storageAccounts@2021-04-01' = {
   properties: {
     isHnsEnabled: true
   }
+  resource blobService 'blobServices' existing = {
+    name: 'default'
+    resource blobContainer 'containers' = {
+      name: 'data'
+      properties: {
+        publicAccess: 'Blob'
+      }
+    }
+  }
+}
+
+// User Identity
+resource userAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = {
+  name: 'configDeployer'
+  location: location
 }
 
 // Assign Storage Blob Data Reader RBAC role to Azure Purview MI
@@ -175,6 +192,16 @@ resource roleAssignment3 'Microsoft.Authorization/roleAssignments@2020-08-01-pre
   }
 }
 
+// Assign Contributor RBAC role to User Assigned Identity (configDeployer)
+resource roleAssignment4 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
+  name: roleNameGuid4
+  properties: {
+    principalId: userAssignedIdentity.properties.principalId
+    roleDefinitionId: role['Contributor']
+    principalType: 'ServicePrincipal'
+  }
+}
+
 // Data Plane Operations
 resource script 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   name: 'script'
@@ -182,9 +209,20 @@ resource script 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   kind: 'AzurePowerShell'
   properties: {
     azPowerShellVersion: '3.0'
-    arguments: '-tenant_id ${tenantId} -client_id ${clientId} -client_secret ${clientSecret} -purview_account ${pv.name} -vault_uri ${kv.properties.vaultUri} -admin_login ${adminLogin} -sql_secret_name ${sqlSecretName} -subscription_id ${subscriptionId} -resource_group ${rg} -location ${location} -sql_server_name ${sqlsvr.name} -sql_db_name ${sqldb.name}'
+    arguments: '-tenant_id ${tenantId} -client_id ${clientId} -client_secret ${clientSecret} -purview_account ${pv.name} -vault_uri ${kv.properties.vaultUri} -admin_login ${adminLogin} -sql_secret_name ${sqlSecretName} -subscription_id ${subscriptionId} -resource_group ${rg} -location ${location} -sql_server_name ${sqlsvr.name} -sql_db_name ${sqldb.name} -storage_account_name ${adls.name}'
     scriptContent: loadTextContent('purview.ps1')
     forceUpdateTag: timestamp // script will run every time
     retentionInterval: 'PT4H' // deploymentScript resource will delete itself in 4 hours
   }
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${userAssignedIdentity.id}': {}
+    }
+  }
+  dependsOn: [
+    pv
+    adls
+    roleAssignment4
+  ]
 }
