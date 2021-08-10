@@ -218,6 +218,7 @@ $source_adls_payload = @{
         collection = ""
         location = $location
         parentCollection = ""
+        endpoint = "https://${storage_account_name}.dfs.core.windows.net/"
         resourceGroup = $resource_group
         resourceName = $storage_account_name
         subscriptionId = $subscription_id
