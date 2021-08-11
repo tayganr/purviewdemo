@@ -3,7 +3,6 @@ This repository includes a template (i.e. Bicep + PowerShell) that can be used t
 
 ## Prerequisites
 
-* [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/get-started-with-azure-cli)
 * An active [Azure subscription](https://azure.microsoft.com/en-us/free/).
 * A resource group to which you have [Owner](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles) permissions. 
 * [Register an application with Azure AD](https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal#register-an-application-with-azure-ad-and-create-a-service-principal) and [create a new application secret](https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal#option-2-create-a-new-application-secret).
