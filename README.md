@@ -29,24 +29,24 @@ This repository includes a template (i.e. Bicep + PowerShell) that can be used t
 
 ## Control Plane (azuredeploy.bicep)
 
-| Namespace | Type |
-| ------------- | ------------- |
-| Microsoft.Purview | accounts |
-| Microsoft.Sql | servers |
-| Microsoft.Sql | servers/databases |
-| Microsoft.Sql | servers/firewallRules (allow Azure services) |
-| Microsoft.Sql | servers/firewallRules (allow all) |
-| Microsoft.KeyVault | vaults |
-| Microsoft.KeyVault | vaults/accessPolicies (Current User) |
-| Microsoft.KeyVault | vaults/accessPolicies (Azure Purview MI)|
-| Microsoft.KeyVault | vaults/secret (sql-secret) |
-| Microsoft.Storage | storageAccounts |
-| Microsoft.Storage | storageAccounts/blobServices |
-| Microsoft.Storage | storageAccounts/blobServices/containers |
-| Microsoft.DataFactory | factories |
-| Microsoft.ManagedIdentity | userAssignedIdentities |
-| Microsoft.Authorization | roleAssignments |
-| Microsoft.Resources | deploymentScripts |
+| # | Namespace | Type |
+| ------------- | ------------- | ------------- |
+| 1 | Microsoft.Purview | accounts |
+| 2 | Microsoft.Sql | servers |
+| 3 | Microsoft.Sql | servers/databases |
+| 4 | Microsoft.Sql | servers/firewallRules (allow Azure services) |
+| 5 | Microsoft.Sql | servers/firewallRules (allow all) |
+| 6 | Microsoft.KeyVault | vaults |
+| 7 | Microsoft.KeyVault | vaults/accessPolicies (Current User) |
+| 8 | Microsoft.KeyVault | vaults/accessPolicies (Azure Purview MI)|
+| 9 | Microsoft.KeyVault | vaults/secret (sql-secret) |
+| 10 | Microsoft.Storage | storageAccounts |
+| 11 | Microsoft.Storage | storageAccounts/blobServices |
+| 12 | Microsoft.Storage | storageAccounts/blobServices/containers |
+| 13 | Microsoft.DataFactory | factories |
+| 14 | Microsoft.ManagedIdentity | userAssignedIdentities |
+| 15 | Microsoft.Authorization | roleAssignments |
+| 16 | Microsoft.Resources | deploymentScripts |
 
 ## Role Assignments
 
@@ -59,7 +59,7 @@ This repository includes a template (i.e. Bicep + PowerShell) that can be used t
 | 5 | Azure Storage Account | Azure Purview MI | Storage Blob Data Reader |
 | 6 | Resource Group | User Assigned Identity | Contributor |
 
-## Post Deployment Script (purview.ps1)
+## Data Plane (purview.ps1)
 
 1. Get Access Token
 2. Azure Purview: Create Azure Key Vault Connection
