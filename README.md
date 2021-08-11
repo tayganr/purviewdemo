@@ -10,10 +10,10 @@ This repository includes a template (i.e. Bicep + PowerShell) that can be used t
 
 ## Usage
 
-1. Download template files to your local machine (azuredeploy)
+1. Download the following files to your local machine:
     * [azuredeploy.bicep](https://raw.githubusercontent.com/tayganr/purviewdemo/main/bicep/azuredeploy.bicep)
-    * [azuredeploy.parameters.json](https://github.com/tayganr/purviewdemo/blob/main/bicep/azuredeploy.parameters.json)
-    * [purview.ps1](https://github.com/tayganr/purviewdemo/blob/main/bicep/purview.ps1)
+    * [azuredeploy.parameters.json](https://raw.githubusercontent.com/tayganr/purviewdemo/main/bicep/azuredeploy.parameters.json)
+    * [purview.ps1](https://raw.githubusercontent.com/tayganr/purviewdemo/main/bicep/purview.ps1)
 2. Update **azuredeploy.parameters.json** file with your values.
 3. Execute the following command:  
 
