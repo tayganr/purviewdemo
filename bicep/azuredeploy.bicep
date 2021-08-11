@@ -11,6 +11,8 @@ param roleNameGuid1 string = newGuid()
 param roleNameGuid2 string = newGuid()
 param roleNameGuid3 string = newGuid()
 param roleNameGuid4 string = newGuid()
+param roleNameGuid5 string = newGuid()
+param roleNameGuid6 string = newGuid()
 param location string = resourceGroup().location
 @secure()
 param adminPassword string = newGuid()
@@ -26,6 +28,7 @@ var role = {
   PurviewDataSourceAdministrator: '${roleDefinitionPrefix}/200bba9e-f0c8-430f-892b-6f0794863803'
   StorageBlobDataReader: '${roleDefinitionPrefix}/2a2b9908-6ea1-4ae2-8e65-a410df84e7d1'
   Contributor: '${roleDefinitionPrefix}/b24988ac-6180-42a0-ab88-20f7382dd24c'
+  UserAccessAdministrator: '${roleDefinitionPrefix}/18d7d88d-d35e-4fb5-a5c3-7773c20a72d9'
 }
 
 // Azure Purview Account
@@ -199,6 +202,46 @@ resource roleAssignment4 'Microsoft.Authorization/roleAssignments@2020-08-01-pre
     principalId: userAssignedIdentity.properties.principalId
     roleDefinitionId: role['Contributor']
     principalType: 'ServicePrincipal'
+  }
+}
+
+// Assign User Access Administrator RBAC role to Current User
+resource roleAssignment5 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
+  name: roleNameGuid5
+  scope: pv
+  properties: {
+    principalId: objectId
+    roleDefinitionId: role['UserAccessAdministrator']
+    principalType: 'User'
+  }
+}
+
+// Assign Purview Data Curator RBAC role to Azure Data Factory MI
+resource roleAssignment6 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
+  name: roleNameGuid6
+  scope: pv
+  properties: {
+    principalId: adf.identity.principalId
+    roleDefinitionId: role['PurviewDataCurator']
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// Azure Data Factory
+resource adf 'Microsoft.DataFactory/factories@2018-06-01' = {
+  name: 'pvdemo${suffix}-adf'
+  location: location
+  properties: {
+    publicNetworkAccess: 'Enabled'
+    purviewConfiguration: {
+      purviewResourceId: pv.id
+    }
+  }
+  identity: {
+    type: 'SystemAssigned'
+  }
+  tags: {
+    catalogUri: '${pv.name}.catalog.purview.azure.com'
   }
 }
 
