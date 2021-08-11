@@ -125,6 +125,9 @@ function runScan([string]$token, [string]$dataSourceName, [string]$scanName) {
 Write-Output "[INFO] Getting Access Token..."
 $token = getToken $tenant_id $client_id $client_secret
 
+# Note: MSI Not currently supported. Error: Audience https://purview.azure.net is not a supported MSI token audience
+# $token = (Get-AzAccessToken -ResourceUrl "https://purview.azure.net").Token
+
 # 2. Create a Key Vault Connection
 $vault_payload = @{
     properties = @{

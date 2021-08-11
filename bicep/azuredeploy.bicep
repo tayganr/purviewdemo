@@ -1,34 +1,33 @@
 // Parameters
+@description('Please enter your Object ID. This can be found by locating your profile within Azure Portal\\Azure Active Directory\\Users.')
 param objectId string       // Azure AD (Current User)
-param clientId string       // CLIENT_ID
-param clientSecret string   // CLIENT_SECRET
+@description('Please enter the Service Principal Object ID. PowerShell: $(Get-AzureADServicePrincipal -Filter "DisplayName eq \'YOUR_SERVICE_PRINCIPAL_NAME\'").ObjectId')
 param spObjectId string     // OBJECT_ID
+@description('Please enter the Service Principal Client ID. PowerShell: $(Get-AzureADServicePrincipal -Filter "DisplayName eq \'YOUR_SERVICE_PRINCIPAL_NAME\'").AppId')
+param clientId string       // CLIENT_ID
+@description('Please enter the Service Principal Client Secret.')
+param clientSecret string   // CLIENT_SECRET
+@description('Please enter the Azure SQL Server admin login.')
 param adminLogin string = 'sqladmin'
-param sqlSecretName string = 'sql-secret'
-param suffix string = utcNow('ssfff')
-param timestamp string = utcNow()
-param roleNameGuid1 string = newGuid()
-param roleNameGuid2 string = newGuid()
-param roleNameGuid3 string = newGuid()
-param roleNameGuid4 string = newGuid()
-param roleNameGuid5 string = newGuid()
-param roleNameGuid6 string = newGuid()
-param location string = resourceGroup().location
 @secure()
 param adminPassword string = newGuid()
 
 // Variables
-var rg = resourceGroup().name
-var subscriptionId = subscription().subscriptionId
+var location = resourceGroup().location
 var tenantId = subscription().tenantId
-var roleDefinitionPrefix = '/subscriptions/${subscriptionId}/providers/Microsoft.Authorization/roleDefinitions'
+var subscriptionId = subscription().subscriptionId
+var rg = resourceGroup().name
+var suffix = substring(uniqueString(rg),0,4)
+var sqlSecretName = 'sql-secret'
+var rdPrefix = '/subscriptions/${subscriptionId}/providers/Microsoft.Authorization/roleDefinitions'
 var role = {
-  PurviewDataCurator: '${roleDefinitionPrefix}/8a3c2885-9b38-4fd2-9d99-91af537c1347'
-  PurviewDataReader: '${roleDefinitionPrefix}/ff100721-1b9d-43d8-af52-42b69c1272db'
-  PurviewDataSourceAdministrator: '${roleDefinitionPrefix}/200bba9e-f0c8-430f-892b-6f0794863803'
-  StorageBlobDataReader: '${roleDefinitionPrefix}/2a2b9908-6ea1-4ae2-8e65-a410df84e7d1'
-  Contributor: '${roleDefinitionPrefix}/b24988ac-6180-42a0-ab88-20f7382dd24c'
-  UserAccessAdministrator: '${roleDefinitionPrefix}/18d7d88d-d35e-4fb5-a5c3-7773c20a72d9'
+  PurviewDataCurator: '${rdPrefix}/8a3c2885-9b38-4fd2-9d99-91af537c1347'
+  PurviewDataReader: '${rdPrefix}/ff100721-1b9d-43d8-af52-42b69c1272db'
+  PurviewDataSourceAdministrator: '${rdPrefix}/200bba9e-f0c8-430f-892b-6f0794863803'
+  StorageBlobDataReader: '${rdPrefix}/2a2b9908-6ea1-4ae2-8e65-a410df84e7d1'
+  StorageBlobDataContributor: '${rdPrefix}/ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+  Contributor: '${rdPrefix}/b24988ac-6180-42a0-ab88-20f7382dd24c'
+  UserAccessAdministrator: '${rdPrefix}/18d7d88d-d35e-4fb5-a5c3-7773c20a72d9'
 }
 
 // Azure Purview Account
@@ -46,7 +45,7 @@ resource pv 'Microsoft.Purview/accounts@2020-12-01-preview' = {
 
 // Assign Purview Data Curator RBAC role to Service Principal
 resource roleAssignment1 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
-  name: roleNameGuid1
+  name: guid('ra01${rg}')
   scope: pv
   properties: {
     principalId: spObjectId
@@ -57,7 +56,7 @@ resource roleAssignment1 'Microsoft.Authorization/roleAssignments@2020-08-01-pre
 
 // Assign Purview Data Source Administrator RBAC role to Service Principal
 resource roleAssignment2 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
-  name: roleNameGuid2
+  name: guid('ra02${rg}')
   scope: pv
   properties: {
     principalId: spObjectId
@@ -186,7 +185,7 @@ resource userAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@
 
 // Assign Storage Blob Data Reader RBAC role to Azure Purview MI
 resource roleAssignment3 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
-  name: roleNameGuid3
+  name: guid('ra03${rg}')
   scope: adls
   properties: {
     principalId: pv.identity.principalId
@@ -197,7 +196,7 @@ resource roleAssignment3 'Microsoft.Authorization/roleAssignments@2020-08-01-pre
 
 // Assign Contributor RBAC role to User Assigned Identity (configDeployer)
 resource roleAssignment4 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
-  name: roleNameGuid4
+  name: guid('ra04${rg}')
   properties: {
     principalId: userAssignedIdentity.properties.principalId
     roleDefinitionId: role['Contributor']
@@ -207,7 +206,7 @@ resource roleAssignment4 'Microsoft.Authorization/roleAssignments@2020-08-01-pre
 
 // Assign User Access Administrator RBAC role to Current User
 resource roleAssignment5 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
-  name: roleNameGuid5
+  name: guid('ra05${rg}')
   scope: pv
   properties: {
     principalId: objectId
@@ -218,11 +217,22 @@ resource roleAssignment5 'Microsoft.Authorization/roleAssignments@2020-08-01-pre
 
 // Assign Purview Data Curator RBAC role to Azure Data Factory MI
 resource roleAssignment6 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
-  name: roleNameGuid6
+  name: guid('ra06${rg}')
   scope: pv
   properties: {
     principalId: adf.identity.principalId
     roleDefinitionId: role['PurviewDataCurator']
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// Storage Blob Data Contributor RBAC role to Azure Data Factory MI
+resource roleAssignment7 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
+  name: guid('ra07${rg}')
+  scope: adls
+  properties: {
+    principalId: adf.identity.principalId
+    roleDefinitionId: role['StorageBlobDataContributor']
     principalType: 'ServicePrincipal'
   }
 }
@@ -254,7 +264,7 @@ resource script 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
     azPowerShellVersion: '3.0'
     arguments: '-tenant_id ${tenantId} -client_id ${clientId} -client_secret ${clientSecret} -purview_account ${pv.name} -vault_uri ${kv.properties.vaultUri} -admin_login ${adminLogin} -sql_secret_name ${sqlSecretName} -subscription_id ${subscriptionId} -resource_group ${rg} -location ${location} -sql_server_name ${sqlsvr.name} -sql_db_name ${sqldb.name} -storage_account_name ${adls.name}'
     scriptContent: loadTextContent('purview.ps1')
-    forceUpdateTag: timestamp // script will run every time
+    forceUpdateTag: guid(resourceGroup().id)
     retentionInterval: 'PT4H' // deploymentScript resource will delete itself in 4 hours
   }
   identity: {

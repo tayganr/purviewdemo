@@ -57,7 +57,8 @@ This repository includes a template (i.e. Bicep + PowerShell) that can be used t
 | 3 | Azure Purview Account | Service Principal | Purview Data Source Administrator |
 | 4 | Azure Purview Account | Current User | User Access Administrator |
 | 5 | Azure Storage Account | Azure Purview MI | Storage Blob Data Reader |
-| 6 | Resource Group | User Assigned Identity | Contributor |
+| 6 | Azure Storage Account | Azure Data Factory MI | Storage Blob Data Contributor |
+| 7 | Resource Group | User Assigned Identity | Contributor |
 
 ## Data Plane (purview.ps1)
 
