@@ -9,15 +9,16 @@ This repository includes a template (i.e. Bicep + PowerShell) that can be used t
 * [Register an application with Azure AD](https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal#register-an-application-with-azure-ad-and-create-a-service-principal) and [create a new application secret](https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal#option-2-create-a-new-application-secret).
 
 ## Usage
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ftayganr%2Fpurviewdemo%2Fmain%2Fbicep%2Fazuredeploy.json)
 
-1. Download the following files to your local machine:
+<!-- 1. Download the following files to your local machine:
     * [azuredeploy.bicep](https://raw.githubusercontent.com/tayganr/purviewdemo/main/bicep/azuredeploy.bicep)
     * [azuredeploy.parameters.json](https://raw.githubusercontent.com/tayganr/purviewdemo/main/bicep/azuredeploy.parameters.json)
     * [purview.ps1](https://raw.githubusercontent.com/tayganr/purviewdemo/main/bicep/purview.ps1)
 2. Update **azuredeploy.parameters.json** file with your values.
-3. Execute the following command:  
+3. Execute the following command:
 
-`az deployment group create -g YOUR_RESOURCE_GROUP -f azuredeploy.bicep -p parameters.json `
+`az deployment group create -g YOUR_RESOURCE_GROUP -f azuredeploy.bicep -p parameters.json ` -->
 
 ## Resources
 
