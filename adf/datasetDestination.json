@@ -1,0 +1,22 @@
+{
+    "name": "DestinationDataset_a9c",
+    "properties": {
+        "linkedServiceName": {
+            "referenceName": "AzureDataLakeStorageLinkedService",
+            "type": "LinkedServiceReference"
+        },
+        "annotations": [],
+        "type": "Parquet",
+        "typeProperties": {
+            "location": {
+                "type": "AzureBlobFSLocation",
+                "fileName": "merged.parquet",
+                "folderPath": "data",
+                "fileSystem": "bing"
+            },
+            "compressionCodec": "snappy"
+        },
+        "schema": []
+    },
+    "type": "Microsoft.DataFactory/factories/datasets"
+}
