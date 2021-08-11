@@ -5,6 +5,7 @@ param objectId string       // Azure AD (Current User)
 param spObjectId string     // OBJECT_ID
 @description('Please enter the Service Principal Client ID. PowerShell: $(Get-AzureADServicePrincipal -Filter "DisplayName eq \'YOUR_SERVICE_PRINCIPAL_NAME\'").AppId')
 param clientId string       // CLIENT_ID
+@secure()
 @description('Please enter the Service Principal Client Secret.')
 param clientSecret string   // CLIENT_SECRET
 @description('Please enter the Azure SQL Server admin login.')
@@ -264,6 +265,7 @@ resource script 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
     azPowerShellVersion: '3.0'
     arguments: '-tenant_id ${tenantId} -client_id ${clientId} -client_secret ${clientSecret} -purview_account ${pv.name} -vault_uri ${kv.properties.vaultUri} -admin_login ${adminLogin} -sql_secret_name ${sqlSecretName} -subscription_id ${subscriptionId} -resource_group ${rg} -location ${location} -sql_server_name ${sqlsvr.name} -sql_db_name ${sqldb.name} -storage_account_name ${adls.name}'
     scriptContent: loadTextContent('purview.ps1')
+    // primaryScriptUri: 'https://raw.githubusercontent.com/tayganr/purviewdemo/main/bicep/purview.ps1'
     forceUpdateTag: guid(resourceGroup().id)
     retentionInterval: 'PT4H' // deploymentScript resource will delete itself in 4 hours
   }
