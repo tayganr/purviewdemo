@@ -43,9 +43,10 @@ This repository includes a template (i.e. Bicep + PowerShell) that can be used t
 | Microsoft.Storage | storageAccounts |
 | Microsoft.Storage | storageAccounts/blobServices |
 | Microsoft.Storage | storageAccounts/blobServices/containers |
+| Microsoft.DataFactory | factories |
 | Microsoft.ManagedIdentity | userAssignedIdentities |
-| Microsoft.Resources | deploymentScripts |
 | Microsoft.Authorization | roleAssignments |
+| Microsoft.Resources | deploymentScripts |
 
 ## Role Assignments
 
