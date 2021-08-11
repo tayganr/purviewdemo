@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.63.48766",
-      "templateHash": "9689517222080703183"
+      "templateHash": "14450384720227645111"
     }
   },
   "parameters": {
@@ -15,32 +15,32 @@
         "description": "Please enter your Object ID. This can be found by locating your profile within Azure Portal\\Azure Active Directory\\Users."
       }
     },
-    "spObjectId": {
+    "servicePrincipalObjectID": {
       "type": "string",
       "metadata": {
         "description": "Please enter the Service Principal Object ID. PowerShell: $(Get-AzureADServicePrincipal -Filter \"DisplayName eq 'YOUR_SERVICE_PRINCIPAL_NAME'\").ObjectId"
       }
     },
-    "clientId": {
+    "servicePrincipalClientId": {
       "type": "string",
       "metadata": {
         "description": "Please enter the Service Principal Client ID. PowerShell: $(Get-AzureADServicePrincipal -Filter \"DisplayName eq 'YOUR_SERVICE_PRINCIPAL_NAME'\").AppId"
       }
     },
-    "clientSecret": {
+    "servicePrincipalClientSecret": {
       "type": "secureString",
       "metadata": {
         "description": "Please enter the Service Principal Client Secret."
       }
     },
-    "adminLogin": {
+    "sqlServerAdminLogin": {
       "type": "string",
       "defaultValue": "sqladmin",
       "metadata": {
         "description": "Please enter the Azure SQL Server admin login."
       }
     },
-    "adminPassword": {
+    "sqlServerAdminPassword": {
       "type": "secureString",
       "defaultValue": "[newGuid()]"
     }
@@ -94,7 +94,7 @@
       "apiVersion": "2021-04-01-preview",
       "name": "[format('{0}/{1}', format('pvdemo{0}-keyvault', variables('suffix')), variables('sqlSecretName'))]",
       "properties": {
-        "value": "[parameters('adminPassword')]"
+        "value": "[parameters('sqlServerAdminPassword')]"
       },
       "dependsOn": [
         "[resourceId('Microsoft.KeyVault/vaults', format('pvdemo{0}-keyvault', variables('suffix')))]"
@@ -130,7 +130,7 @@
       "scope": "[format('Microsoft.Purview/accounts/{0}', format('pvdemo{0}-pv', variables('suffix')))]",
       "name": "[guid(format('ra01{0}', variables('rg')))]",
       "properties": {
-        "principalId": "[parameters('spObjectId')]",
+        "principalId": "[parameters('servicePrincipalObjectID')]",
         "roleDefinitionId": "[variables('role').PurviewDataCurator]",
         "principalType": "ServicePrincipal"
       },
@@ -144,7 +144,7 @@
       "scope": "[format('Microsoft.Purview/accounts/{0}', format('pvdemo{0}-pv', variables('suffix')))]",
       "name": "[guid(format('ra02{0}', variables('rg')))]",
       "properties": {
-        "principalId": "[parameters('spObjectId')]",
+        "principalId": "[parameters('servicePrincipalObjectID')]",
         "roleDefinitionId": "[variables('role').PurviewDataSourceAdministrator]",
         "principalType": "ServicePrincipal"
       },
@@ -158,8 +158,8 @@
       "name": "[format('pvdemo{0}-sqlsvr', variables('suffix'))]",
       "location": "[variables('location')]",
       "properties": {
-        "administratorLogin": "[parameters('adminLogin')]",
-        "administratorLoginPassword": "[parameters('adminPassword')]"
+        "administratorLogin": "[parameters('sqlServerAdminLogin')]",
+        "administratorLoginPassword": "[parameters('sqlServerAdminPassword')]"
       }
     },
     {
@@ -347,7 +347,7 @@
       "kind": "AzurePowerShell",
       "properties": {
         "azPowerShellVersion": "3.0",
-        "arguments": "[format('-tenant_id {0} -client_id {1} -client_secret {2} -purview_account {3} -vault_uri {4} -admin_login {5} -sql_secret_name {6} -subscription_id {7} -resource_group {8} -location {9} -sql_server_name {10} -sql_db_name {11} -storage_account_name {12}', variables('tenantId'), parameters('clientId'), parameters('clientSecret'), format('pvdemo{0}-pv', variables('suffix')), reference(resourceId('Microsoft.KeyVault/vaults', format('pvdemo{0}-keyvault', variables('suffix')))).vaultUri, parameters('adminLogin'), variables('sqlSecretName'), variables('subscriptionId'), variables('rg'), variables('location'), format('pvdemo{0}-sqlsvr', variables('suffix')), format('pvdemo{0}-sqldb', variables('suffix')), format('pvdemo{0}adls', variables('suffix')))]",
+        "arguments": "[format('-tenant_id {0} -client_id {1} -client_secret {2} -purview_account {3} -vault_uri {4} -admin_login {5} -sql_secret_name {6} -subscription_id {7} -resource_group {8} -location {9} -sql_server_name {10} -sql_db_name {11} -storage_account_name {12}', variables('tenantId'), parameters('servicePrincipalClientId'), parameters('servicePrincipalClientSecret'), format('pvdemo{0}-pv', variables('suffix')), reference(resourceId('Microsoft.KeyVault/vaults', format('pvdemo{0}-keyvault', variables('suffix')))).vaultUri, parameters('sqlServerAdminLogin'), variables('sqlSecretName'), variables('subscriptionId'), variables('rg'), variables('location'), format('pvdemo{0}-sqlsvr', variables('suffix')), format('pvdemo{0}-sqldb', variables('suffix')), format('pvdemo{0}adls', variables('suffix')))]",
         "primaryScriptUri": "https://raw.githubusercontent.com/tayganr/purviewdemo/main/bicep/purview.ps1",
         "forceUpdateTag": "[guid(resourceGroup().id)]",
         "retentionInterval": "PT4H"

@@ -2,16 +2,16 @@
 @description('Please enter your Object ID. This can be found by locating your profile within Azure Portal\\Azure Active Directory\\Users.')
 param objectId string       // Azure AD (Current User)
 @description('Please enter the Service Principal Object ID. PowerShell: $(Get-AzureADServicePrincipal -Filter "DisplayName eq \'YOUR_SERVICE_PRINCIPAL_NAME\'").ObjectId')
-param spObjectId string     // OBJECT_ID
+param servicePrincipalObjectID string     // OBJECT_ID
 @description('Please enter the Service Principal Client ID. PowerShell: $(Get-AzureADServicePrincipal -Filter "DisplayName eq \'YOUR_SERVICE_PRINCIPAL_NAME\'").AppId')
-param clientId string       // CLIENT_ID
+param servicePrincipalClientId string       // CLIENT_ID
 @secure()
 @description('Please enter the Service Principal Client Secret.')
-param clientSecret string   // CLIENT_SECRET
+param servicePrincipalClientSecret string   // CLIENT_SECRET
 @description('Please enter the Azure SQL Server admin login.')
-param adminLogin string = 'sqladmin'
+param sqlServerAdminLogin string = 'sqladmin'
 @secure()
-param adminPassword string = newGuid()
+param sqlServerAdminPassword string = newGuid()
 
 // Variables
 var location = resourceGroup().location
@@ -49,7 +49,7 @@ resource roleAssignment1 'Microsoft.Authorization/roleAssignments@2020-08-01-pre
   name: guid('ra01${rg}')
   scope: pv
   properties: {
-    principalId: spObjectId
+    principalId: servicePrincipalObjectID
     roleDefinitionId: role['PurviewDataCurator']
     principalType: 'ServicePrincipal'
   }
@@ -60,7 +60,7 @@ resource roleAssignment2 'Microsoft.Authorization/roleAssignments@2020-08-01-pre
   name: guid('ra02${rg}')
   scope: pv
   properties: {
-    principalId: spObjectId
+    principalId: servicePrincipalObjectID
     roleDefinitionId: role['PurviewDataSourceAdministrator']
     principalType: 'ServicePrincipal'
   }
@@ -71,8 +71,8 @@ resource sqlsvr 'Microsoft.Sql/servers@2021-02-01-preview' = {
   name: 'pvdemo${suffix}-sqlsvr'
   location: location
   properties: {
-    administratorLogin: adminLogin
-    administratorLoginPassword: adminPassword
+    administratorLogin: sqlServerAdminLogin
+    administratorLoginPassword: sqlServerAdminPassword
   }
   resource firewall1 'firewallRules' = {
     name: 'allowAzure'
@@ -151,7 +151,7 @@ resource kv 'Microsoft.KeyVault/vaults@2021-04-01-preview' = {
   resource secret 'secrets' = {
     name: sqlSecretName
     properties: {
-      value: adminPassword
+      value: sqlServerAdminPassword
     }
   }
 }
@@ -263,7 +263,7 @@ resource script 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   kind: 'AzurePowerShell'
   properties: {
     azPowerShellVersion: '3.0'
-    arguments: '-tenant_id ${tenantId} -client_id ${clientId} -client_secret ${clientSecret} -purview_account ${pv.name} -vault_uri ${kv.properties.vaultUri} -admin_login ${adminLogin} -sql_secret_name ${sqlSecretName} -subscription_id ${subscriptionId} -resource_group ${rg} -location ${location} -sql_server_name ${sqlsvr.name} -sql_db_name ${sqldb.name} -storage_account_name ${adls.name}'
+    arguments: '-tenant_id ${tenantId} -client_id ${servicePrincipalClientId} -client_secret ${servicePrincipalClientSecret} -purview_account ${pv.name} -vault_uri ${kv.properties.vaultUri} -admin_login ${sqlServerAdminLogin} -sql_secret_name ${sqlSecretName} -subscription_id ${subscriptionId} -resource_group ${rg} -location ${location} -sql_server_name ${sqlsvr.name} -sql_db_name ${sqldb.name} -storage_account_name ${adls.name}'
     scriptContent: loadTextContent('purview.ps1')
     // primaryScriptUri: 'https://raw.githubusercontent.com/tayganr/purviewdemo/main/bicep/purview.ps1'
     forceUpdateTag: guid(resourceGroup().id)
