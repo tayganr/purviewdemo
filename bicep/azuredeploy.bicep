@@ -171,7 +171,7 @@ resource adls 'Microsoft.Storage/storageAccounts@2021-04-01' = {
   resource blobService 'blobServices' existing = {
     name: 'default'
     resource blobContainer 'containers' = {
-      name: 'data'
+      name: 'bing'
       properties: {
         publicAccess: 'Blob'
       }

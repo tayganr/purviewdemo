@@ -199,12 +199,13 @@ Write-Output "[INFO] Triggering Scan Run..."
 runScan $token $source_sqldb_payload.name $scan_sqldb_payload.name
 
 # 7. Load Storage Account with Sample Data
+$containerName = "bing"
 $storageAccount = Get-AzStorageAccount -ResourceGroupName $resource_group -Name $storage_account_name
-$RepoUrl = 'https://api.github.com/repos/nytimes/covid-19-data/zipball/master'
-Invoke-RestMethod -Uri $RepoUrl -OutFile "repo.zip"
-Expand-Archive -Path "repo.zip"
-Set-Location -Path "repo"
-Get-ChildItem -File -Recurse | Set-AzStorageBlobContent -Container "data" -Context $storageAccount.Context
+$RepoUrl = 'https://api.github.com/repos/microsoft/BingCoronavirusQuerySet/zipball/master'
+Invoke-RestMethod -Uri $RepoUrl -OutFile "${containerName}.zip"
+Expand-Archive -Path "${containerName}.zip"
+Set-Location -Path "${containerName}"
+Get-ChildItem -File -Recurse | Set-AzStorageBlobContent -Container ${containerName} -Context $storageAccount.Context
 
 # 8. Create a Source (ADLS Gen2)
 $source_adls_payload = @{
