@@ -5,14 +5,14 @@
         "objectId": {
             "value": "YOUR_AZURE_AD_OBJECT_ID"
         },
-        "clientId": {
+        "servicePrincipalObjectID": {
+            "value": "SERVICE_PRINCIPAL_OBJECT_ID"
+        },
+        "servicePrincipalClientId": {
             "value": "SERVICE_PRINCIPAL_CLIENT_ID"
         },
-        "clientSecret": {
+        "servicePrincipalClientSecret": {
             "value": "SERVICE_PRINCIPAL_CLIENT_SECRET"
-        },
-        "spObjectId": {
-            "value": "SERVICE_PRINCIPAL_OBJECT_ID"
         }
     }
 }

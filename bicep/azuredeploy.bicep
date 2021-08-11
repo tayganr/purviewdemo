@@ -119,6 +119,7 @@ resource kv 'Microsoft.KeyVault/vaults@2021-04-01-preview' = {
       family: 'A'
       name: 'standard'
     }
+    enableSoftDelete: false
     tenantId: tenantId
     accessPolicies: [
       {
@@ -198,6 +199,7 @@ resource roleAssignment3 'Microsoft.Authorization/roleAssignments@2020-08-01-pre
 // Assign Contributor RBAC role to User Assigned Identity (configDeployer)
 resource roleAssignment4 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
   name: guid('ra04${rg}')
+  scope: resourceGroup()
   properties: {
     principalId: userAssignedIdentity.properties.principalId
     roleDefinitionId: role['Contributor']

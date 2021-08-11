@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.63.48766",
-      "templateHash": "14450384720227645111"
+      "templateHash": "9937738910860920188"
     }
   },
   "parameters": {
@@ -194,6 +194,7 @@
           "family": "A",
           "name": "standard"
         },
+        "enableSoftDelete": false,
         "tenantId": "[variables('tenantId')]",
         "accessPolicies": [
           {

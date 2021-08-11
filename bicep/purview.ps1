@@ -14,12 +14,6 @@ param(
     [string]$storage_account_name
 )
 
-# 1. Key Vault Connection
-# 2. Credential
-# 3. Source
-# 4. Scan
-# 5. Trigger (Run Scan)
-
 # Variables
 $scan_endpoint = "https://${purview_account}.scan.purview.azure.com"
 $proxy_endpoint = "https://${purview_account}.purview.azure.com/proxy"
