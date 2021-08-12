@@ -5,44 +5,47 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.63.48766",
-      "templateHash": "13632969365080924075"
+      "templateHash": "14208137437134143179"
     }
   },
   "parameters": {
     "objectID": {
       "type": "string",
       "metadata": {
-        "description": "Please enter your Object ID.\nThis can be found by locating your profile within Azure Portal > Azure Active Directory > Users."
+        "description": "Please enter your Azure AD Object ID. This can be found by locating your profile within Azure Portal > Azure Active Directory > Users."
       }
     },
     "servicePrincipalObjectID": {
       "type": "string",
       "metadata": {
-        "description": "Please enter the Service Principal Object ID. PowerShell: $(Get-AzureADServicePrincipal -Filter \"DisplayName eq 'YOUR_SERVICE_PRINCIPAL_NAME'\").ObjectId"
+        "description": "Please enter your Service Principal Object ID. PowerShell: $(Get-AzureADServicePrincipal -Filter \"DisplayName eq 'YOUR_SERVICE_PRINCIPAL_NAME'\").ObjectId"
       }
     },
     "servicePrincipalClientID": {
       "type": "string",
       "metadata": {
-        "description": "Please enter the Service Principal Client ID. PowerShell: $(Get-AzureADServicePrincipal -Filter \"DisplayName eq 'YOUR_SERVICE_PRINCIPAL_NAME'\").AppId"
+        "description": "Please enter your Service Principal Client ID. PowerShell: $(Get-AzureADServicePrincipal -Filter \"DisplayName eq 'YOUR_SERVICE_PRINCIPAL_NAME'\").AppId"
       }
     },
     "servicePrincipalClientSecret": {
       "type": "secureString",
       "metadata": {
-        "description": "Please enter the Service Principal Client Secret."
+        "description": "Please enter your Service Principal Client Secret."
       }
     },
     "sqlServerAdminLogin": {
       "type": "string",
       "defaultValue": "sqladmin",
       "metadata": {
-        "description": "Please enter the Azure SQL Server admin login."
+        "description": "Please specify a login name for the Azure SQL Server administrator. Default value: sqladmin."
       }
     },
     "sqlServerAdminPassword": {
       "type": "secureString",
-      "defaultValue": "[newGuid()]"
+      "defaultValue": "[newGuid()]",
+      "metadata": {
+        "description": "Please specify a password for the Azure SQL Server administrator. Default value: newGuid()."
+      }
     }
   },
   "functions": [],

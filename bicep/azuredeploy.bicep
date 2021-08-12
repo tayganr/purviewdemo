@@ -1,16 +1,17 @@
 // Parameters
-@description('Please enter your Object ID.\nThis can be found by locating your profile within Azure Portal > Azure Active Directory > Users.')
+@description('Please enter your Azure AD Object ID. This can be found by locating your profile within Azure Portal > Azure Active Directory > Users.')
 param objectID string       // Azure AD (Current User)
-@description('Please enter the Service Principal Object ID. PowerShell: $(Get-AzureADServicePrincipal -Filter "DisplayName eq \'YOUR_SERVICE_PRINCIPAL_NAME\'").ObjectId')
+@description('Please enter your Service Principal Object ID. PowerShell: $(Get-AzureADServicePrincipal -Filter "DisplayName eq \'YOUR_SERVICE_PRINCIPAL_NAME\'").ObjectId')
 param servicePrincipalObjectID string     // OBJECT_ID
-@description('Please enter the Service Principal Client ID. PowerShell: $(Get-AzureADServicePrincipal -Filter "DisplayName eq \'YOUR_SERVICE_PRINCIPAL_NAME\'").AppId')
+@description('Please enter your Service Principal Client ID. PowerShell: $(Get-AzureADServicePrincipal -Filter "DisplayName eq \'YOUR_SERVICE_PRINCIPAL_NAME\'").AppId')
 param servicePrincipalClientID string       // CLIENT_ID
 @secure()
-@description('Please enter the Service Principal Client Secret.')
+@description('Please enter your Service Principal Client Secret.')
 param servicePrincipalClientSecret string   // CLIENT_SECRET
-@description('Please enter the Azure SQL Server admin login.')
+@description('Please specify a login name for the Azure SQL Server administrator. Default value: sqladmin.')
 param sqlServerAdminLogin string = 'sqladmin'
 @secure()
+@description('Please specify a password for the Azure SQL Server administrator. Default value: newGuid().')
 param sqlServerAdminPassword string = newGuid()
 
 // Variables
