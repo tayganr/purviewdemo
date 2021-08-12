@@ -10,15 +10,6 @@ This repository includes a template (i.e. Bicep + PowerShell) that can be used t
 ## Usage
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ftayganr%2Fpurviewdemo%2Fmain%2Fbicep%2Fazuredeploy.json)
 
-<!-- 1. Download the following files to your local machine:
-    * [azuredeploy.bicep](https://raw.githubusercontent.com/tayganr/purviewdemo/main/bicep/azuredeploy.bicep)
-    * [azuredeploy.parameters.json](https://raw.githubusercontent.com/tayganr/purviewdemo/main/bicep/azuredeploy.parameters.json)
-    * [purview.ps1](https://raw.githubusercontent.com/tayganr/purviewdemo/main/bicep/purview.ps1)
-2. Update **azuredeploy.parameters.json** file with your values.
-3. Execute the following command:
-
-`az deployment group create -g YOUR_RESOURCE_GROUP -f azuredeploy.bicep -p parameters.json ` -->
-
 ## Resources
 
 * Azure Purview Account
@@ -44,9 +35,13 @@ This repository includes a template (i.e. Bicep + PowerShell) that can be used t
 | 11 | Microsoft.Storage | storageAccounts/blobServices |
 | 12 | Microsoft.Storage | storageAccounts/blobServices/containers |
 | 13 | Microsoft.DataFactory | factories |
-| 14 | Microsoft.ManagedIdentity | userAssignedIdentities |
-| 15 | Microsoft.Authorization | roleAssignments |
-| 16 | Microsoft.Resources | deploymentScripts |
+| 14 | Microsoft.DataFactory | factories/linkedservices |
+| 15 | Microsoft.DataFactory | factories/datasets |
+| 16 | Microsoft.DataFactory | factories/datasets |
+| 17 | Microsoft.DataFactory | factories/pipelines |
+| 18 | Microsoft.ManagedIdentity | userAssignedIdentities |
+| 19 | Microsoft.Authorization | roleAssignments |
+| 20 | Microsoft.Resources | deploymentScripts |
 
 ## Role Assignments
 
@@ -60,7 +55,7 @@ This repository includes a template (i.e. Bicep + PowerShell) that can be used t
 | 6 | Azure Storage Account | Azure Data Factory MI | Storage Blob Data Contributor |
 | 7 | Resource Group | User Assigned Identity | Contributor |
 
-## Data Plane (purview.ps1)
+## Data Plane (deploymentScript.ps1)
 
 1. Get Access Token
 2. Azure Purview: Create Azure Key Vault Connection
@@ -72,3 +67,4 @@ This repository includes a template (i.e. Bicep + PowerShell) that can be used t
 8. Azure Data Lake Storage Gen2: Register Source
 9. Azure Data Lake Storage Gen2: Create Scan
 10. Azure Data Lake Storage Gen2: Run Scan
+11. Azure Data Factory: Run Pipeline

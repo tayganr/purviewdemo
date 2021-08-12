@@ -256,6 +256,130 @@ resource adf 'Microsoft.DataFactory/factories@2018-06-01' = {
   tags: {
     catalogUri: '${pv.name}.catalog.purview.azure.com'
   }
+  resource linkedServiceStorage 'linkedservices@2018-06-01' = {
+    name: 'AzureDataLakeStorageLinkedService'
+    properties: {
+      type: 'AzureBlobFS'
+      typeProperties: {
+        url: adls.properties.primaryEndpoints.dfs
+      }
+    }
+  }
+  resource datasetSource 'datasets@2018-06-01' = {
+    name: 'SourceDataset_a9c'
+    properties: {
+      linkedServiceName: {
+        referenceName: linkedServiceStorage.name
+        type: 'LinkedServiceReference'
+      }
+      type: 'DelimitedText'
+      typeProperties: {
+        location: {
+          type: 'AzureBlobFSLocation'
+          folderPath: 'data/2020'
+          fileSystem: 'bing'
+        }
+        columnDelimiter: '\t'
+        rowDelimiter: '\n'
+        escapeChar: '\\'
+        firstRowAsHeader: true
+        quoteChar: '"'
+      }
+      schema: [
+        {
+          name: 'Date'
+          type: 'String'
+        }
+        {
+          name: 'Query'
+          type: 'String'
+        }
+        {
+          name: 'IsImplicitIntent'
+          type: 'String'
+        }
+        {
+          name: 'Country'
+          type: 'String'
+        }
+        {
+          name: 'PopularityScore'
+          type: 'String'
+        }
+      ]
+    }
+  }
+  resource datasetDestination 'datasets@2018-06-01' = {
+    name: 'SourceDestination_a9c'
+    properties: {
+      linkedServiceName: {
+        referenceName: linkedServiceStorage.name
+        type: 'LinkedServiceReference'
+      }
+      type: 'Parquet'
+      typeProperties: {
+        location: {
+          type: 'AzureBlobFSLocation'
+          fileName: 'merged.parquet'
+          folderPath: 'data'
+          fileSystem: 'bing'
+        }
+        compressionCodec: 'snappy'
+      }
+      schema: []
+    }
+  }
+  resource pipelineCopy 'pipelines@2018-06-01' = {
+    name: 'copyPipeline'
+    properties: {
+      activities: [
+        {
+          name: 'Copy_a9c'
+          type: 'Copy'
+          dependsOn: []
+          typeProperties: {
+            source: {
+              type: 'DelimitedTextSource'
+              storeSettings: {
+                type: 'AzureBlobFSReadSettings'
+                recursive: true
+                wildcardFileName: '*'
+                enablePartitionDiscovery: false
+              }
+              formatSettings: {
+                type: 'DelimitedTextReadSettings'
+                skipLineCount: 0
+              }
+            }
+            sink: {
+              type: 'ParquetSink'
+              storeSettings: {
+                type: 'AzureBlobFSWriteSettings'
+                copyBehavior: 'MergeFiles'
+              }
+              formatSettings: {
+                type: 'ParquetWriteSettings'
+              }
+            }
+            enableStaging: false
+            validateDataConsistency: false
+          }
+          inputs: [
+            {
+              referenceName: datasetSource.name
+              type: 'DatasetReference'
+            }
+          ]
+          outputs: [
+            {
+              referenceName: datasetDestination.name
+              type: 'DatasetReference'
+            }
+          ]
+        }
+      ]
+    }
+  }
 }
 
 // Data Plane Operations
@@ -265,9 +389,9 @@ resource script 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   kind: 'AzurePowerShell'
   properties: {
     azPowerShellVersion: '3.0'
-    arguments: '-tenant_id ${tenantId} -client_id ${servicePrincipalClientId} -client_secret ${servicePrincipalClientSecret} -purview_account ${pv.name} -vault_uri ${kv.properties.vaultUri} -admin_login ${sqlServerAdminLogin} -sql_secret_name ${sqlSecretName} -subscription_id ${subscriptionId} -resource_group ${rg} -location ${location} -sql_server_name ${sqlsvr.name} -sql_db_name ${sqldb.name} -storage_account_name ${adls.name}'
-    scriptContent: loadTextContent('purview.ps1')
-    // primaryScriptUri: 'https://raw.githubusercontent.com/tayganr/purviewdemo/main/bicep/purview.ps1'
+    arguments: '-tenant_id ${tenantId} -client_id ${servicePrincipalClientId} -client_secret ${servicePrincipalClientSecret} -purview_account ${pv.name} -vault_uri ${kv.properties.vaultUri} -admin_login ${sqlServerAdminLogin} -sql_secret_name ${sqlSecretName} -subscription_id ${subscriptionId} -resource_group ${rg} -location ${location} -sql_server_name ${sqlsvr.name} -sql_db_name ${sqldb.name} -storage_account_name ${adls.name} -adf_name ${adf.name} -adf_pipeline_name ${adf::pipelineCopy.name}'
+    // scriptContent: loadTextContent('deploymentScript.ps1')
+    primaryScriptUri: 'https://raw.githubusercontent.com/tayganr/purviewdemo/main/bicep/deploymentScript.ps1'
     forceUpdateTag: guid(resourceGroup().id)
     retentionInterval: 'PT4H' // deploymentScript resource will delete itself in 4 hours
   }

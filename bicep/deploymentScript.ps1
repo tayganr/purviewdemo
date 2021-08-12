@@ -11,7 +11,9 @@ param(
     [string]$location,
     [string]$sql_server_name,
     [string]$sql_db_name,
-    [string]$storage_account_name
+    [string]$storage_account_name,
+    [string]$adf_name,
+    [string]$adf_pipeline_name
 )
 
 # Variables
@@ -116,7 +118,6 @@ function runScan([string]$token, [string]$dataSourceName, [string]$scanName) {
 }
 
 # 1. Get Access Token
-Write-Output "[INFO] Getting Access Token..."
 $token = getToken $tenant_id $client_id $client_secret
 
 # Note: MSI Not currently supported. Error: Audience https://purview.azure.net is not a supported MSI token audience
@@ -129,7 +130,6 @@ $vault_payload = @{
         description = ""
     }
 }
-Write-Output "[INFO] Creating Azure Key Vault Connection..."
 $vault = putVault $token $vault_payload
 
 # 3. Create a Credential
@@ -153,7 +153,6 @@ $credential_payload = @{
     }
     type = "Microsoft.Purview/accounts/credentials"
 }
-Write-Output "[INFO] Creating Azure Purview Credential..."
 putCredential $token $credential_payload
 
 # 4. Create a Source (Azure SQL Database)
@@ -171,7 +170,6 @@ $source_sqldb_payload = @{
         subscriptionId = $subscription_id
     }
 }
-Write-Output "[INFO] Creating Data Source..."
 putSource $token $source_sqldb_payload
 
 # 5. Create a Scan Configuration
@@ -191,11 +189,9 @@ $scan_sqldb_payload = @{
         }
     }
 }
-Write-Output "[INFO] Creating Scan Configuration..."
 putScan $token $source_sqldb_payload.name $scan_sqldb_payload
 
 # 6. Trigger Scan
-Write-Output "[INFO] Triggering Scan Run..."
 runScan $token $source_sqldb_payload.name $scan_sqldb_payload.name
 
 # 7. Load Storage Account with Sample Data
@@ -222,7 +218,6 @@ $source_adls_payload = @{
         subscriptionId = $subscription_id
     }
 }
-Write-Output "[INFO] Creating Data Source..."
 putSource $token $source_adls_payload
 
 # 9. Create a Scan Configuration
@@ -236,9 +231,10 @@ $scan_adls_payload = @{
         scanRulesetType = "System"
     }
 }
-Write-Output "[INFO] Creating Scan Configuration..."
 putScan $token $source_adls_payload.name $scan_adls_payload
 
 # 10. Trigger Scan
-Write-Output "[INFO] Triggering Scan Run..."
 runScan $token $source_adls_payload.name $scan_adls_payload.name
+
+# 11. Run ADF Pipeline
+Invoke-AzDataFactoryV2Pipeline -ResourceGroupName $resource_group -DataFactoryName $adf_name -PipelineName $adf_pipeline_name
