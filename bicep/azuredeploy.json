@@ -5,14 +5,14 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.63.48766",
-      "templateHash": "15970374981934311670"
+      "templateHash": "13632969365080924075"
     }
   },
   "parameters": {
-    "objectId": {
+    "objectID": {
       "type": "string",
       "metadata": {
-        "description": "Please enter your Object ID. This can be found by locating your profile within Azure Portal\\Azure Active Directory\\Users."
+        "description": "Please enter your Object ID.\nThis can be found by locating your profile within Azure Portal > Azure Active Directory > Users."
       }
     },
     "servicePrincipalObjectID": {
@@ -21,7 +21,7 @@
         "description": "Please enter the Service Principal Object ID. PowerShell: $(Get-AzureADServicePrincipal -Filter \"DisplayName eq 'YOUR_SERVICE_PRINCIPAL_NAME'\").ObjectId"
       }
     },
-    "servicePrincipalClientId": {
+    "servicePrincipalClientID": {
       "type": "string",
       "metadata": {
         "description": "Please enter the Service Principal Client ID. PowerShell: $(Get-AzureADServicePrincipal -Filter \"DisplayName eq 'YOUR_SERVICE_PRINCIPAL_NAME'\").AppId"
@@ -348,7 +348,7 @@
         "accessPolicies": [
           {
             "tenantId": "[variables('tenantId')]",
-            "objectId": "[parameters('objectId')]",
+            "objectId": "[parameters('objectID')]",
             "permissions": {
               "secrets": [
                 "get",
@@ -430,7 +430,7 @@
       "scope": "[format('Microsoft.Purview/accounts/{0}', format('pvdemo{0}-pv', variables('suffix')))]",
       "name": "[guid(format('ra05{0}', variables('rg')))]",
       "properties": {
-        "principalId": "[parameters('objectId')]",
+        "principalId": "[parameters('objectID')]",
         "roleDefinitionId": "[variables('role').UserAccessAdministrator]",
         "principalType": "User"
       },
@@ -497,7 +497,7 @@
       "kind": "AzurePowerShell",
       "properties": {
         "azPowerShellVersion": "3.0",
-        "arguments": "[format('-tenant_id {0} -client_id {1} -client_secret {2} -purview_account {3} -vault_uri {4} -admin_login {5} -sql_secret_name {6} -subscription_id {7} -resource_group {8} -location {9} -sql_server_name {10} -sql_db_name {11} -storage_account_name {12} -adf_name {13} -adf_pipeline_name {14}', variables('tenantId'), parameters('servicePrincipalClientId'), parameters('servicePrincipalClientSecret'), format('pvdemo{0}-pv', variables('suffix')), reference(resourceId('Microsoft.KeyVault/vaults', format('pvdemo{0}-keyvault', variables('suffix')))).vaultUri, parameters('sqlServerAdminLogin'), variables('sqlSecretName'), variables('subscriptionId'), variables('rg'), variables('location'), format('pvdemo{0}-sqlsvr', variables('suffix')), format('pvdemo{0}-sqldb', variables('suffix')), format('pvdemo{0}adls', variables('suffix')), format('pvdemo{0}-adf', variables('suffix')), 'copyPipeline')]",
+        "arguments": "[format('-tenant_id {0} -client_id {1} -client_secret {2} -purview_account {3} -vault_uri {4} -admin_login {5} -sql_secret_name {6} -subscription_id {7} -resource_group {8} -location {9} -sql_server_name {10} -sql_db_name {11} -storage_account_name {12} -adf_name {13} -adf_pipeline_name {14}', variables('tenantId'), parameters('servicePrincipalClientID'), parameters('servicePrincipalClientSecret'), format('pvdemo{0}-pv', variables('suffix')), reference(resourceId('Microsoft.KeyVault/vaults', format('pvdemo{0}-keyvault', variables('suffix')))).vaultUri, parameters('sqlServerAdminLogin'), variables('sqlSecretName'), variables('subscriptionId'), variables('rg'), variables('location'), format('pvdemo{0}-sqlsvr', variables('suffix')), format('pvdemo{0}-sqldb', variables('suffix')), format('pvdemo{0}adls', variables('suffix')), format('pvdemo{0}-adf', variables('suffix')), 'copyPipeline')]",
         "primaryScriptUri": "https://raw.githubusercontent.com/tayganr/purviewdemo/main/bicep/deploymentScript.ps1",
         "forceUpdateTag": "[guid(resourceGroup().id)]",
         "retentionInterval": "PT4H"

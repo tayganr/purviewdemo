@@ -1,10 +1,10 @@
 // Parameters
-@description('Please enter your Object ID. This can be found by locating your profile within Azure Portal\\Azure Active Directory\\Users.')
-param objectId string       // Azure AD (Current User)
+@description('Please enter your Object ID.\nThis can be found by locating your profile within Azure Portal > Azure Active Directory > Users.')
+param objectID string       // Azure AD (Current User)
 @description('Please enter the Service Principal Object ID. PowerShell: $(Get-AzureADServicePrincipal -Filter "DisplayName eq \'YOUR_SERVICE_PRINCIPAL_NAME\'").ObjectId')
 param servicePrincipalObjectID string     // OBJECT_ID
 @description('Please enter the Service Principal Client ID. PowerShell: $(Get-AzureADServicePrincipal -Filter "DisplayName eq \'YOUR_SERVICE_PRINCIPAL_NAME\'").AppId')
-param servicePrincipalClientId string       // CLIENT_ID
+param servicePrincipalClientID string       // CLIENT_ID
 @secure()
 @description('Please enter the Service Principal Client Secret.')
 param servicePrincipalClientSecret string   // CLIENT_SECRET
@@ -124,7 +124,7 @@ resource kv 'Microsoft.KeyVault/vaults@2021-04-01-preview' = {
     accessPolicies: [
       {
         tenantId: tenantId
-        objectId: objectId
+        objectId: objectID
         permissions:{
           secrets: [
             'get'
@@ -212,7 +212,7 @@ resource roleAssignment5 'Microsoft.Authorization/roleAssignments@2020-08-01-pre
   name: guid('ra05${rg}')
   scope: pv
   properties: {
-    principalId: objectId
+    principalId: objectID
     roleDefinitionId: role['UserAccessAdministrator']
     principalType: 'User'
   }
@@ -389,7 +389,7 @@ resource script 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   kind: 'AzurePowerShell'
   properties: {
     azPowerShellVersion: '3.0'
-    arguments: '-tenant_id ${tenantId} -client_id ${servicePrincipalClientId} -client_secret ${servicePrincipalClientSecret} -purview_account ${pv.name} -vault_uri ${kv.properties.vaultUri} -admin_login ${sqlServerAdminLogin} -sql_secret_name ${sqlSecretName} -subscription_id ${subscriptionId} -resource_group ${rg} -location ${location} -sql_server_name ${sqlsvr.name} -sql_db_name ${sqldb.name} -storage_account_name ${adls.name} -adf_name ${adf.name} -adf_pipeline_name ${adf::pipelineCopy.name}'
+    arguments: '-tenant_id ${tenantId} -client_id ${servicePrincipalClientID} -client_secret ${servicePrincipalClientSecret} -purview_account ${pv.name} -vault_uri ${kv.properties.vaultUri} -admin_login ${sqlServerAdminLogin} -sql_secret_name ${sqlSecretName} -subscription_id ${subscriptionId} -resource_group ${rg} -location ${location} -sql_server_name ${sqlsvr.name} -sql_db_name ${sqldb.name} -storage_account_name ${adls.name} -adf_name ${adf.name} -adf_pipeline_name ${adf::pipelineCopy.name}'
     // scriptContent: loadTextContent('deploymentScript.ps1')
     primaryScriptUri: 'https://raw.githubusercontent.com/tayganr/purviewdemo/main/bicep/deploymentScript.ps1'
     forceUpdateTag: guid(resourceGroup().id)
