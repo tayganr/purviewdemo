@@ -60,11 +60,12 @@ This repository includes a template (i.e. Bicep + PowerShell) that can be used t
 1. Get Access Token
 2. Azure Purview: Create Azure Key Vault Connection
 3. Azure Purview: Create Credential
-4. Azure SQL Database: Register Source
-5. Azure SQL Database: Create Scan
-6. Azure SQL Database: Run Scan
-7. Azure Data Lake Storage Gen2: Load Sample Data
-8. Azure Data Lake Storage Gen2: Register Source
-9. Azure Data Lake Storage Gen2: Create Scan
-10. Azure Data Lake Storage Gen2: Run Scan
-11. Azure Data Factory: Run Pipeline
+4. Azure Purview: Create Collection
+5. Azure SQL Database: Register Source
+6. Azure SQL Database: Create Scan
+7. Azure SQL Database: Run Scan
+8. Azure Data Lake Storage Gen2: Load Sample Data
+9. Azure Data Lake Storage Gen2: Register Source
+10. Azure Data Lake Storage Gen2: Create Scan
+11. Azure Data Lake Storage Gen2: Run Scan
+12. Azure Data Factory: Run Pipeline

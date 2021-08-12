@@ -155,7 +155,14 @@ $credential_payload = @{
 }
 putCredential $token $credential_payload
 
-# 4. Create a Source (Azure SQL Database)
+# 4. Create a Collection (Contoso)
+$source_collection_payload = @{
+    kind = "Collection"
+    name = "Contoso"
+}
+putSource $token $source_collection_payload
+
+# 5. Create a Source (Azure SQL Database)
 $source_sqldb_payload = @{
     id = "datasources/AzureSqlDatabase"
     kind = "AzureSqlDatabase"
@@ -163,7 +170,10 @@ $source_sqldb_payload = @{
     properties = @{
         collection = ""
         location = $location
-        parentCollection = ""
+        parentCollection = @{
+            referenceName = $source_collection_payload.name
+            type = 'DataSourceReference'
+        }
         resourceGroup = $resource_group
         resourceName = $sql_server_name
         serverEndpoint = "${sql_server_name}.database.windows.net"
@@ -172,7 +182,7 @@ $source_sqldb_payload = @{
 }
 putSource $token $source_sqldb_payload
 
-# 5. Create a Scan Configuration
+# 6. Create a Scan Configuration
 $randomId = -join (((48..57)+(65..90)+(97..122)) * 80 |Get-Random -Count 3 |ForEach-Object{[char]$_})
 $scanName = "Scan-${randomId}"
 $scan_sqldb_payload = @{
@@ -191,10 +201,10 @@ $scan_sqldb_payload = @{
 }
 putScan $token $source_sqldb_payload.name $scan_sqldb_payload
 
-# 6. Trigger Scan
+# 7. Trigger Scan
 runScan $token $source_sqldb_payload.name $scan_sqldb_payload.name
 
-# 7. Load Storage Account with Sample Data
+# 8. Load Storage Account with Sample Data
 $containerName = "bing"
 $storageAccount = Get-AzStorageAccount -ResourceGroupName $resource_group -Name $storage_account_name
 $RepoUrl = 'https://api.github.com/repos/microsoft/BingCoronavirusQuerySet/zipball/master'
@@ -203,7 +213,7 @@ Expand-Archive -Path "${containerName}.zip"
 Set-Location -Path "${containerName}"
 Get-ChildItem -File -Recurse | Set-AzStorageBlobContent -Container ${containerName} -Context $storageAccount.Context
 
-# 8. Create a Source (ADLS Gen2)
+# 9. Create a Source (ADLS Gen2)
 $source_adls_payload = @{
     id = "datasources/AzureDataLakeStorage"
     kind = "AdlsGen2"
@@ -211,7 +221,10 @@ $source_adls_payload = @{
     properties = @{
         collection = ""
         location = $location
-        parentCollection = ""
+        parentCollection = @{
+            referenceName = $source_collection_payload.name
+            type = 'DataSourceReference'
+        }
         endpoint = "https://${storage_account_name}.dfs.core.windows.net/"
         resourceGroup = $resource_group
         resourceName = $storage_account_name
@@ -220,7 +233,7 @@ $source_adls_payload = @{
 }
 putSource $token $source_adls_payload
 
-# 9. Create a Scan Configuration
+# 10. Create a Scan Configuration
 $randomId = -join (((48..57)+(65..90)+(97..122)) * 80 |Get-Random -Count 3 |ForEach-Object{[char]$_})
 $scanName = "Scan-${randomId}"
 $scan_adls_payload = @{
@@ -233,8 +246,8 @@ $scan_adls_payload = @{
 }
 putScan $token $source_adls_payload.name $scan_adls_payload
 
-# 10. Trigger Scan
+# 11. Trigger Scan
 runScan $token $source_adls_payload.name $scan_adls_payload.name
 
-# 11. Run ADF Pipeline
+# 12. Run ADF Pipeline
 Invoke-AzDataFactoryV2Pipeline -ResourceGroupName $resource_group -DataFactoryName $adf_name -PipelineName $adf_pipeline_name
