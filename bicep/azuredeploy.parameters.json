@@ -2,13 +2,13 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "objectId": {
+        "objectID": {
             "value": "YOUR_AZURE_AD_OBJECT_ID"
         },
         "servicePrincipalObjectID": {
             "value": "SERVICE_PRINCIPAL_OBJECT_ID"
         },
-        "servicePrincipalClientId": {
+        "servicePrincipalClientID": {
             "value": "SERVICE_PRINCIPAL_CLIENT_ID"
         },
         "servicePrincipalClientSecret": {
