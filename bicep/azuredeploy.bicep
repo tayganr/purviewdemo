@@ -390,9 +390,9 @@ resource script 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   kind: 'AzurePowerShell'
   properties: {
     azPowerShellVersion: '3.0'
-    arguments: '-tenant_id ${tenantId} -client_id ${servicePrincipalClientID} -client_secret ${servicePrincipalClientSecret} -purview_account ${pv.name} -vault_uri ${kv.properties.vaultUri} -admin_login ${sqlServerAdminLogin} -sql_secret_name ${sqlSecretName} -subscription_id ${subscriptionId} -resource_group ${rg} -location ${location} -sql_server_name ${sqlsvr.name} -sql_db_name ${sqldb.name} -storage_account_name ${adls.name} -adf_name ${adf.name} -adf_pipeline_name ${adf::pipelineCopy.name}'
-    // scriptContent: loadTextContent('deploymentScript.ps1')
-    primaryScriptUri: 'https://raw.githubusercontent.com/tayganr/purviewdemo/main/bicep/deploymentScript.ps1'
+    arguments: '-tenant_id ${tenantId} -client_id ${servicePrincipalClientID} -client_secret ${servicePrincipalClientSecret} -purview_account ${pv.name} -vault_uri ${kv.properties.vaultUri} -admin_login ${sqlServerAdminLogin} -sql_secret_name ${sqlSecretName} -subscription_id ${subscriptionId} -resource_group ${rg} -location ${location} -sql_server_name ${sqlsvr.name} -sql_db_name ${sqldb.name} -storage_account_name ${adls.name} -adf_name ${adf.name} -adf_pipeline_name ${adf::pipelineCopy.name} -managed_identity ${userAssignedIdentity.properties.principalId}'
+    scriptContent: loadTextContent('deploymentScript.ps1')
+    // primaryScriptUri: 'https://raw.githubusercontent.com/tayganr/purviewdemo/main/bicep/deploymentScript.ps1'
     forceUpdateTag: guid(resourceGroup().id)
     retentionInterval: 'PT4H' // deploymentScript resource will delete itself in 4 hours
   }

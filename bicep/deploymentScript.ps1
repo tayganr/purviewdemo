@@ -13,11 +13,13 @@ param(
     [string]$sql_db_name,
     [string]$storage_account_name,
     [string]$adf_name,
-    [string]$adf_pipeline_name
+    [string]$adf_pipeline_name,
+    [string]$managed_identity
 )
 
 # Variables
 $scan_endpoint = "https://${purview_account}.scan.purview.azure.com"
+$catalog_endpoint = "https://${purview_account}.catalog.purview.azure.com"
 $proxy_endpoint = "https://${purview_account}.purview.azure.com/proxy"
 
 # [POST] Token
@@ -251,3 +253,41 @@ runScan $token $source_adls_payload.name $scan_adls_payload.name
 
 # 12. Run ADF Pipeline
 Invoke-AzDataFactoryV2Pipeline -ResourceGroupName $resource_group -DataFactoryName $adf_name -PipelineName $adf_pipeline_name
+
+# 13. Populate Glossary
+function createGlossary([string]$token) {
+    $uri = "${catalog_endpoint}/api/atlas/v2/glossary"
+    $payload = @{
+        name = "Glossary"
+        qualifiedName = "Glossary"
+    }
+    $params = @{
+        ContentType = "application/json"
+        Headers = @{"Authorization"=$token}
+        Method = "POST"
+        URI = $uri
+        Body = ($payload | ConvertTo-Json -Depth 4)
+    }
+    $response = Invoke-RestMethod @params
+    Return $response
+}
+function importGlossaryTerms([string]$token, [string]$glossaryGuid, [string]$glossaryTermsTemplateUri) {
+    $glossaryTermsFilename = "import-terms-sample.csv"
+    Invoke-RestMethod -Uri $glossaryTermsTemplateUri -OutFile $glossaryTermsFilename
+    $glossaryImportUri = "${catalog_endpoint}/api/atlas/v2/glossary/${glossaryGuid}/terms/import?includeTermHierarchy=true&api-version=2021-05-01-preview"
+    $fieldName = 'file'
+    $filePath = (Get-Item $glossaryTermsFilename).FullName
+    Add-Type -AssemblyName System.Net.Http
+    $client = New-Object System.Net.Http.HttpClient
+    $content = New-Object System.Net.Http.MultipartFormDataContent
+    $fileStream = [System.IO.File]::OpenRead($filePath)
+    $fileContent = New-Object System.Net.Http.StreamContent($fileStream)
+    $content.Add($fileContent, $fieldName, $glossaryTermsFilename)
+    $access_token = $token.split(" ")[1]
+    $client.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", $access_token)
+    $result = $client.PostAsync($glossaryImportUri, $content).Result
+    return $result
+}
+$glossaryGuid = (createGlossary $token).guid
+$glossaryTermsTemplateUri = 'https://raw.githubusercontent.com/tayganr/purviewlab/main/assets/import-terms-sample.csv'
+importGlossaryTerms $token $glossaryGuid $glossaryTermsTemplateUri
