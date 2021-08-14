@@ -1,5 +1,5 @@
 # Azure Purview Demo Environment
-This repository includes a template (i.e. Bicep + PowerShell) that can be used to automate the deployment of an Azure Purview demo environment.
+This repository includes template files that can be used to automate the deployment of an Azure Purview demo environment.
 
 ## Prerequisites
 
