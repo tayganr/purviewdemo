@@ -383,6 +383,80 @@ resource adf 'Microsoft.DataFactory/factories@2018-06-01' = {
   }
 }
 
+// Default Data Lake Storage Account (Synapse Workspace)
+resource swsadls 'Microsoft.Storage/storageAccounts@2021-04-01' = {
+  name: 'pvdemo${suffix}synapsedl'
+  location: location
+  kind: 'StorageV2'
+  sku: {
+    name: 'Standard_LRS'
+  }
+  properties: {
+    isHnsEnabled: true
+    networkAcls: {
+      bypass: 'AzureServices'
+      virtualNetworkRules: []
+      ipRules: []
+      defaultAction: 'Allow'
+    }
+    supportsHttpsTrafficOnly: true
+    accessTier: 'Hot'
+  }
+  resource service 'blobServices' = {
+    name: 'default'
+    resource container 'containers' = {
+      name: 'synapsefs${suffix}'
+    }
+  }
+}
+
+// Azure Synapse Workspace
+resource sws 'Microsoft.Synapse/workspaces@2021-05-01' = {
+  name: 'pvdemo${suffix}-synapse'
+  location: location
+  properties: {
+    defaultDataLakeStorage: {
+      accountUrl: reference(swsadls.name).primaryEndpoints.dfs
+      filesystem: 'synapsefs${suffix}'
+    }
+    purviewConfiguration: {
+      purviewResourceId: '/subscriptions/${subscriptionId}/resourceGroups/${rg}/providers/Microsoft.Purview/accounts/${pv.name}'
+    }
+  }
+  identity: {
+    type: 'SystemAssigned'
+  }
+  resource firewall 'firewallRules' = {
+    name: 'allowAll'
+    properties: {
+      startIpAddress: '0.0.0.0'
+      endIpAddress: '255.255.255.255'
+    }
+  }
+}
+
+// Role Assignment (Synapse Workspace Managed Identity -> Storage Blob Data Contributor)
+resource roleAssignment8 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
+  name: guid('ra08${rg}')
+  scope: swsadls
+  properties: {
+    principalId: sws.identity.principalId
+    roleDefinitionId: role['StorageBlobDataContributor']
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// Assign Storage Blob Data Reader RBAC role to Current User
+resource roleAssignment9 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
+  name: guid('ra09${rg}')
+  scope: adls
+  properties: {
+    principalId: objectID
+    roleDefinitionId: role['StorageBlobDataReader']
+    principalType: 'User'
+  }
+}
+
 // Data Plane Operations
 resource script 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   name: 'script'
@@ -391,8 +465,8 @@ resource script 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   properties: {
     azPowerShellVersion: '3.0'
     arguments: '-tenant_id ${tenantId} -client_id ${servicePrincipalClientID} -client_secret ${servicePrincipalClientSecret} -purview_account ${pv.name} -vault_uri ${kv.properties.vaultUri} -admin_login ${sqlServerAdminLogin} -sql_secret_name ${sqlSecretName} -subscription_id ${subscriptionId} -resource_group ${rg} -location ${location} -sql_server_name ${sqlsvr.name} -sql_db_name ${sqldb.name} -storage_account_name ${adls.name} -adf_name ${adf.name} -adf_pipeline_name ${adf::pipelineCopy.name} -managed_identity ${userAssignedIdentity.properties.principalId}'
-    scriptContent: loadTextContent('deploymentScript.ps1')
-    // primaryScriptUri: 'https://raw.githubusercontent.com/tayganr/purviewdemo/main/bicep/deploymentScript.ps1'
+    // scriptContent: loadTextContent('deploymentScript.ps1')
+    primaryScriptUri: 'https://raw.githubusercontent.com/tayganr/purviewdemo/main/bicep/deploymentScript.ps1'
     forceUpdateTag: guid(resourceGroup().id)
     retentionInterval: 'PT4H' // deploymentScript resource will delete itself in 4 hours
   }

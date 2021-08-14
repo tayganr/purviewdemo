@@ -17,31 +17,7 @@ This repository includes a template (i.e. Bicep + PowerShell) that can be used t
 * Azure SQL Database
 * Azure Data Lake Storage Gen2 Account
 * Azure Data Factory
-
-## Control Plane (azuredeploy.bicep)
-
-| # | Namespace | Type |
-| ------------- | ------------- | ------------- |
-| 1 | Microsoft.Purview | accounts |
-| 2 | Microsoft.Sql | servers |
-| 3 | Microsoft.Sql | servers/databases |
-| 4 | Microsoft.Sql | servers/firewallRules (allow Azure services) |
-| 5 | Microsoft.Sql | servers/firewallRules (allow all) |
-| 6 | Microsoft.KeyVault | vaults |
-| 7 | Microsoft.KeyVault | vaults/accessPolicies (Current User) |
-| 8 | Microsoft.KeyVault | vaults/accessPolicies (Azure Purview MI)|
-| 9 | Microsoft.KeyVault | vaults/secret (sql-secret) |
-| 10 | Microsoft.Storage | storageAccounts |
-| 11 | Microsoft.Storage | storageAccounts/blobServices |
-| 12 | Microsoft.Storage | storageAccounts/blobServices/containers |
-| 13 | Microsoft.DataFactory | factories |
-| 14 | Microsoft.DataFactory | factories/linkedservices |
-| 15 | Microsoft.DataFactory | factories/datasets |
-| 16 | Microsoft.DataFactory | factories/datasets |
-| 17 | Microsoft.DataFactory | factories/pipelines |
-| 18 | Microsoft.ManagedIdentity | userAssignedIdentities |
-| 19 | Microsoft.Authorization | roleAssignments |
-| 20 | Microsoft.Resources | deploymentScripts |
+* Azure Synapse Analytics Workspace
 
 ## Role Assignments
 
@@ -54,8 +30,10 @@ This repository includes a template (i.e. Bicep + PowerShell) that can be used t
 | 5 | Azure Storage Account | Azure Purview MI | Storage Blob Data Reader |
 | 6 | Azure Storage Account | Azure Data Factory MI | Storage Blob Data Contributor |
 | 7 | Resource Group | User Assigned Identity | Contributor |
+| 8 | Azure Storage Account | Azure Synapse MI | Storage Blob Data Contributor |
+| 9 | Azure Storage Account | Current User | Storage Blob Data Reader |
 
-## Data Plane (deploymentScript.ps1)
+## Data Plane Operations
 
 1. Get Access Token
 2. Azure Purview: Create Azure Key Vault Connection
@@ -69,3 +47,4 @@ This repository includes a template (i.e. Bicep + PowerShell) that can be used t
 10. Azure Data Lake Storage Gen2: Create Scan
 11. Azure Data Lake Storage Gen2: Run Scan
 12. Azure Data Factory: Run Pipeline
+13. Azure Purview: Populate Glossary

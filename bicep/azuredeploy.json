@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.4.63.48766",
-      "templateHash": "14208137437134143179"
+      "version": "0.4.451.19169",
+      "templateHash": "4646507521520540936"
     }
   },
   "parameters": {
@@ -264,6 +264,35 @@
       ]
     },
     {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2021-04-01",
+      "name": "[format('{0}/{1}/{2}', format('pvdemo{0}synapsedl', variables('suffix')), 'default', format('synapsefs{0}', variables('suffix')))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts/blobServices', format('pvdemo{0}synapsedl', variables('suffix')), 'default')]",
+        "[resourceId('Microsoft.Storage/storageAccounts', format('pvdemo{0}synapsedl', variables('suffix')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices",
+      "apiVersion": "2021-04-01",
+      "name": "[format('{0}/{1}', format('pvdemo{0}synapsedl', variables('suffix')), 'default')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', format('pvdemo{0}synapsedl', variables('suffix')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Synapse/workspaces/firewallRules",
+      "apiVersion": "2021-05-01",
+      "name": "[format('{0}/{1}', format('pvdemo{0}-synapse', variables('suffix')), 'allowAll')]",
+      "properties": {
+        "startIpAddress": "0.0.0.0",
+        "endIpAddress": "255.255.255.255"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Synapse/workspaces', format('pvdemo{0}-synapse', variables('suffix')))]"
+      ]
+    },
+    {
       "type": "Microsoft.Purview/accounts",
       "apiVersion": "2020-12-01-preview",
       "name": "[format('pvdemo{0}-pv', variables('suffix'))]",
@@ -493,6 +522,78 @@
       ]
     },
     {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2021-04-01",
+      "name": "[format('pvdemo{0}synapsedl', variables('suffix'))]",
+      "location": "[variables('location')]",
+      "kind": "StorageV2",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "properties": {
+        "isHnsEnabled": true,
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "virtualNetworkRules": [],
+          "ipRules": [],
+          "defaultAction": "Allow"
+        },
+        "supportsHttpsTrafficOnly": true,
+        "accessTier": "Hot"
+      }
+    },
+    {
+      "type": "Microsoft.Synapse/workspaces",
+      "apiVersion": "2021-05-01",
+      "name": "[format('pvdemo{0}-synapse', variables('suffix'))]",
+      "location": "[variables('location')]",
+      "properties": {
+        "defaultDataLakeStorage": {
+          "accountUrl": "[reference(format('pvdemo{0}synapsedl', variables('suffix'))).primaryEndpoints.dfs]",
+          "filesystem": "[format('synapsefs{0}', variables('suffix'))]"
+        },
+        "purviewConfiguration": {
+          "purviewResourceId": "[format('/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Purview/accounts/{2}', variables('subscriptionId'), variables('rg'), format('pvdemo{0}-pv', variables('suffix')))]"
+        }
+      },
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Purview/accounts', format('pvdemo{0}-pv', variables('suffix')))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', format('pvdemo{0}synapsedl', variables('suffix')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2020-08-01-preview",
+      "scope": "[format('Microsoft.Storage/storageAccounts/{0}', format('pvdemo{0}synapsedl', variables('suffix')))]",
+      "name": "[guid(format('ra08{0}', variables('rg')))]",
+      "properties": {
+        "principalId": "[reference(resourceId('Microsoft.Synapse/workspaces', format('pvdemo{0}-synapse', variables('suffix'))), '2021-05-01', 'full').identity.principalId]",
+        "roleDefinitionId": "[variables('role').StorageBlobDataContributor]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Synapse/workspaces', format('pvdemo{0}-synapse', variables('suffix')))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', format('pvdemo{0}synapsedl', variables('suffix')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2020-08-01-preview",
+      "scope": "[format('Microsoft.Storage/storageAccounts/{0}', format('pvdemo{0}adls', variables('suffix')))]",
+      "name": "[guid(format('ra09{0}', variables('rg')))]",
+      "properties": {
+        "principalId": "[parameters('objectID')]",
+        "roleDefinitionId": "[variables('role').StorageBlobDataReader]",
+        "principalType": "User"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', format('pvdemo{0}adls', variables('suffix')))]"
+      ]
+    },
+    {
       "type": "Microsoft.Resources/deploymentScripts",
       "apiVersion": "2020-10-01",
       "name": "script",
@@ -500,7 +601,7 @@
       "kind": "AzurePowerShell",
       "properties": {
         "azPowerShellVersion": "3.0",
-        "arguments": "[format('-tenant_id {0} -client_id {1} -client_secret {2} -purview_account {3} -vault_uri {4} -admin_login {5} -sql_secret_name {6} -subscription_id {7} -resource_group {8} -location {9} -sql_server_name {10} -sql_db_name {11} -storage_account_name {12} -adf_name {13} -adf_pipeline_name {14}', variables('tenantId'), parameters('servicePrincipalClientID'), parameters('servicePrincipalClientSecret'), format('pvdemo{0}-pv', variables('suffix')), reference(resourceId('Microsoft.KeyVault/vaults', format('pvdemo{0}-keyvault', variables('suffix')))).vaultUri, parameters('sqlServerAdminLogin'), variables('sqlSecretName'), variables('subscriptionId'), variables('rg'), variables('location'), format('pvdemo{0}-sqlsvr', variables('suffix')), format('pvdemo{0}-sqldb', variables('suffix')), format('pvdemo{0}adls', variables('suffix')), format('pvdemo{0}-adf', variables('suffix')), 'copyPipeline')]",
+        "arguments": "[format('-tenant_id {0} -client_id {1} -client_secret {2} -purview_account {3} -vault_uri {4} -admin_login {5} -sql_secret_name {6} -subscription_id {7} -resource_group {8} -location {9} -sql_server_name {10} -sql_db_name {11} -storage_account_name {12} -adf_name {13} -adf_pipeline_name {14} -managed_identity {15}', variables('tenantId'), parameters('servicePrincipalClientID'), parameters('servicePrincipalClientSecret'), format('pvdemo{0}-pv', variables('suffix')), reference(resourceId('Microsoft.KeyVault/vaults', format('pvdemo{0}-keyvault', variables('suffix')))).vaultUri, parameters('sqlServerAdminLogin'), variables('sqlSecretName'), variables('subscriptionId'), variables('rg'), variables('location'), format('pvdemo{0}-sqlsvr', variables('suffix')), format('pvdemo{0}-sqldb', variables('suffix')), format('pvdemo{0}adls', variables('suffix')), format('pvdemo{0}-adf', variables('suffix')), 'copyPipeline', reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'configDeployer')).principalId)]",
         "primaryScriptUri": "https://raw.githubusercontent.com/tayganr/purviewdemo/main/bicep/deploymentScript.ps1",
         "forceUpdateTag": "[guid(resourceGroup().id)]",
         "retentionInterval": "PT4H"
