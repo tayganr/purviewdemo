@@ -74,7 +74,8 @@ $rg = New-AzResourceGroup -Name "pvdemo-rg-${suffix}" -Location $location
 
 # Service Principal
 $subscriptionId = (Get-AzContext).Subscription.Id
-$scope = "/subscriptions/${$subscriptionId}/resourceGroups/${rg.ResourceGroupName}"
+$rgName = $rg.ResourceGroupName
+$scope = "/subscriptions/${subscriptionId}/resourceGroups/${rgName}"
 $sp = New-AzADServicePrincipal -DisplayName "pvDemoServicePrincipal-${suffix}" -Scope $scope
 
 # Deploy Template
