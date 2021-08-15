@@ -73,23 +73,23 @@ $location = Get-Random -InputObject $locationList
 $rg = New-AzResourceGroup -Name "pvdemo-rg-${suffix}" -Location $location
 
 # Service Principal
-$sp = New-AzADServicePrincipal -DisplayName "pvDemoServicePrincipal-${suffix}"
-
-# Client Secret
-$Ptr = [System.Runtime.InteropServices.Marshal]::SecureStringToCoTaskMemUnicode($sp.Secret)
-$password = [System.Runtime.InteropServices.Marshal]::PtrToStringUni($Ptr)
-$securePassword = ConvertTo-SecureString $password –asplaintext –force
+$subscriptionId = (Get-AzContext).Subscription.Id
+$scope = "/subscriptions/${$subscriptionId}/resourceGroups/${rg.ResourceGroupName}"
+$sp = New-AzADServicePrincipal -DisplayName "pvDemoServicePrincipal-${suffix}" -Scope $scope
 
 # Deploy Template
 $templateUri = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/bicep/azuredeploy.json"
-New-AzResourceGroupDeployment `
+$job = New-AzResourceGroupDeployment `
   -Name "pvDemoTemplate-${suffix}" `
   -ResourceGroupName $rg.ResourceGroupName `
   -TemplateUri $templateUri `
   -objectID $principalId `
   -servicePrincipalObjectID $sp.Id `
   -servicePrincipalClientID $sp.ApplicationId `
-  -servicePrincipalClientSecret $securePassword
+  -servicePrincipalClientSecret $sp.Secret `
+  -AsJob
+
+$job
   ```
 
 ## Resources
