@@ -90,7 +90,15 @@ $job = New-AzResourceGroupDeployment `
   -servicePrincipalClientSecret $sp.Secret `
   -AsJob
 
-$job
+$progress = ('.', '..', '...')
+While ($job.State -eq "Running") {
+    Foreach ($x in $progress) {
+        cls
+        Write-Host "Deployment is in progress, this will take approximately 10 minutes"
+        Write-Host "Running${x}"
+        Start-Sleep 1
+    }
+}
   ```
 
 ## Resources
