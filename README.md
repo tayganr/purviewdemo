@@ -123,12 +123,12 @@ New-AzResourceGroupDeployment `
 | 2  | Azure Purview | Create Azure Key Vault Connection |
 | 3  | Azure Purview | Create Credential |
 | 4  | Azure Purview | Create Collection |
-| 5  | Azure Purview | Register Source (Azure SQL DB) |
-| 6  | Azure Purview | Create Scan (Azure SQL DB) |
-| 7  | Azure Purview | Run Scan (Azure SQL DB) |
+| 5  | Azure Purview | Azure SQL DB: Register Source |
+| 6  | Azure Purview | Azure SQL DB: Create Scan |
+| 7  | Azure Purview | Azure SQL DB: Run Scan |
 | 8  | Azure Data Lake Storage Gen2 | Load Sample Data |
-| 9  | Azure Purview | Register Source (ADLS Gen2) |
-| 10 | Azure Purview | Create Scan (ADLS Gen2) |
-| 11 | Azure Purview | Run Scan (ADLS Gen2) |
+| 9  | Azure Purview | ADLS Gen2: Register Source |
+| 10 | Azure Purview | ADLS Gen2: Create Scan |
+| 11 | Azure Purview | ADLS Gen2: Run Scan |
 | 12 | Azure Data Factory | Run Pipeline |
 | 13 | Azure Purview | Populate Glossary |
