@@ -42,9 +42,24 @@ Once you have your parameter values ready, click the button below to deploy to A
 
 ## Option 2 - Cloud Shell
 
+### Prerequisites
+
+* An active [Azure subscription](https://azure.microsoft.com/en-us/free/).
+* Sufficient access to create resources and register an application.
+
+### Usage
+
+The pre-deployment script below negates the pre-work required in option 1 by automatically creating a resource group, service principal, and application secret. These values are then subsequentally fed into the ARM template as parameter values. 
+
+1. Navigate to the [Azure Portal](https://portal.azure.com) and open the [cloud shell](https://docs.microsoft.com/en-us/azure/cloud-shell/overview).
+2. Copy and paste the PowerShell code snippet below into the cloud shell.
+3. When prompted, provide your Azure AD email address.
+
+The template should take approximately 10 minutes to complete.
+
 ```powershell
 # Azure AD Object ID
-$emailAddress = Read-Host -Prompt "`r`nPlease enter your Azure AD email address"
+$emailAddress = Read-Host -Prompt "Please enter your Azure AD email address"
 $principalId = (Get-AzAdUser -Mail $emailAddress).id
 
 # Suffix
@@ -90,28 +105,30 @@ New-AzResourceGroupDeployment `
 
 | # | Scope | Principal | Role Definition |
 | ------------- | ------------- | ------------- | ------------- |
-| 1 | Azure Purview Account | Azure Data Factory MI | Purview Data Curator |
-| 2 | Azure Purview Account | Service Principal | Purview Data Curator |
-| 3 | Azure Purview Account | Service Principal | Purview Data Source Administrator |
+| 1 | Azure Purview Account | Service Principal | Purview Data Curator |
+| 2 | Azure Purview Account | Service Principal | Purview Data Source Administrator |
+| 3 | Azure Purview Account | Azure Data Factory MI | Purview Data Curator |
 | 4 | Azure Purview Account | Current User | User Access Administrator |
-| 5 | Azure Storage Account | Azure Purview MI | Storage Blob Data Reader |
-| 6 | Azure Storage Account | Azure Data Factory MI | Storage Blob Data Contributor |
-| 7 | Resource Group | User Assigned Identity | Contributor |
-| 8 | Azure Storage Account | Azure Synapse MI | Storage Blob Data Contributor |
-| 9 | Azure Storage Account | Current User | Storage Blob Data Reader |
+| 5 | Azure Storage Account | Current User | Storage Blob Data Reader |
+| 6 | Azure Storage Account | Azure Synapse MI | Storage Blob Data Contributor |
+| 7 | Azure Storage Account | Azure Purview MI | Storage Blob Data Reader |
+| 8 | Azure Storage Account | Azure Data Factory MI | Storage Blob Data Contributor |
+| 9 | Resource Group | User Assigned Identity | Contributor |
 
 ## Data Plane Operations
 
-1. Get Access Token
-2. Azure Purview: Create Azure Key Vault Connection
-3. Azure Purview: Create Credential
-4. Azure Purview: Create Collection
-5. Azure SQL Database: Register Source
-6. Azure SQL Database: Create Scan
-7. Azure SQL Database: Run Scan
-8. Azure Data Lake Storage Gen2: Load Sample Data
-9. Azure Data Lake Storage Gen2: Register Source
-10. Azure Data Lake Storage Gen2: Create Scan
-11. Azure Data Lake Storage Gen2: Run Scan
-12. Azure Data Factory: Run Pipeline
-13. Azure Purview: Populate Glossary
+| # | Service | Action |
+| ------------- | ------------- | ------------- |
+| 1  | Identity Provider | Get Access Token |
+| 2  | Azure Purview | Create Azure Key Vault Connection |
+| 3  | Azure Purview | Create Credential |
+| 4  | Azure Purview | Create Collection |
+| 5  | Azure Purview | Register Source (Azure SQL DB) |
+| 6  | Azure Purview | Create Scan (Azure SQL DB) |
+| 7  | Azure Purview | Run Scan (Azure SQL DB) |
+| 8  | Azure Data Lake Storage Gen2 | Load Sample Data |
+| 9  | Azure Purview | Register Source (ADLS Gen2) |
+| 10 | Azure Purview | Create Scan (ADLS Gen2) |
+| 11 | Azure Purview | Run Scan (ADLS Gen2) |
+| 12 | Azure Data Factory | Run Pipeline |
+| 13 | Azure Purview | Populate Glossary |
