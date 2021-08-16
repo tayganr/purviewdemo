@@ -128,7 +128,6 @@ Remove-AzRoleAssignment -ResourceGroupName "purviewlab" -ObjectId $configService
 | 6 | Azure Storage Account | Azure Synapse MI | Storage Blob Data Contributor |
 | 7 | Azure Storage Account | Azure Purview MI | Storage Blob Data Reader |
 | 8 | Azure Storage Account | Azure Data Factory MI | Storage Blob Data Contributor |
-| 9 | Resource Group | User Assigned Identity | Contributor |
 
 ## Data Plane Operations
 
