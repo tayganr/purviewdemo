@@ -5,6 +5,8 @@ This repository includes template files that can be used to automate the deploym
 * [Option 1 - Partial Automation](#option-1---partial-automation). Requires an existing Service Principal.
 * [Option 2 - Complete Automation](#option-2---complete-automation). Service Principal created automtically as part of the deployment.
 
+<div align="right"><a href="#azure-purview-demo-environment">↥ back to top</a></div>
+
 ## Option 1 - Partial Automation
 
 ### Prerequisites
@@ -43,6 +45,8 @@ Below is the parameters required by the template. It is recommended that you hav
 Once you have your parameter values ready, click the button below to deploy to Azure.
 
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ftayganr%2Fpurviewdemo%2Fmain%2Fbicep%2Fazuredeploy.json)
+
+<div align="right"><a href="#azure-purview-demo-environment">↥ back to top</a></div>
 
 ## Option 2 - Complete Automation
 
@@ -124,6 +128,8 @@ Write-Host "Deployment complete! https://web.purview.azure.com/resource/${pv.Nam
 
   ```
 
+<div align="right"><a href="#azure-purview-demo-environment">↥ back to top</a></div>
+
 ## Resources
 
 * Azure Purview Account
@@ -132,6 +138,8 @@ Write-Host "Deployment complete! https://web.purview.azure.com/resource/${pv.Nam
 * Azure Data Lake Storage Gen2 Account
 * Azure Data Factory
 * Azure Synapse Analytics Workspace
+
+<div align="right"><a href="#azure-purview-demo-environment">↥ back to top</a></div>
 
 ## Role Assignments
 
@@ -145,6 +153,8 @@ Write-Host "Deployment complete! https://web.purview.azure.com/resource/${pv.Nam
 | 6 | Azure Storage Account | Azure Synapse MI | Storage Blob Data Contributor |
 | 7 | Azure Storage Account | Azure Purview MI | Storage Blob Data Reader |
 | 8 | Azure Storage Account | Azure Data Factory MI | Storage Blob Data Contributor |
+
+<div align="right"><a href="#azure-purview-demo-environment">↥ back to top</a></div>
 
 ## Data Plane Operations
 
