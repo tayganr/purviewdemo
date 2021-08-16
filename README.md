@@ -59,8 +59,13 @@ The template should take approximately 10 minutes to complete.
 
 ```powershell
 # Azure AD Object ID
-$emailAddress = Read-Host -Prompt "Please enter your Azure AD email address"
-$principalId = (Get-AzAdUser -Mail $emailAddress).id
+$principalId = $null
+Do {
+    $emailAddress = Read-Host -Prompt "Please enter your Azure AD email address"
+    $principalId = (Get-AzAdUser -Mail $emailAddress).id
+    if ($principalId -eq $null) { $principalId = (Get-AzAdUser -UserPrincipalName $emailAddress).Id } 
+    if ($principalId -eq $null) { Write-Host "Unable to find a user within the Azure AD with email address: ${emailAddress}. Please try again." }
+} until($principalId -ne $null)
 
 # Suffix
 $suffix = -join ((65..90) + (97..122) | Get-Random -Count 5 | % {[char]$_})
