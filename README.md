@@ -99,6 +99,13 @@ While ($job.State -eq "Running") {
         Start-Sleep 1
     }
 }
+
+# Clean-Up
+# Remove Service Principal Role Assignment from Resource Group
+Remove-AzRoleAssignment -ResourceGroupName $rgName -ObjectId $sp.Id -RoleDefinitionName "Contributor"
+Remove-AzADServicePrincipal $sp.Id -Force
+$configServicePrincipal = Get-AzADServicePrincipal -DisplayName "configDeployer"
+Remove-AzRoleAssignment -ResourceGroupName "purviewlab" -ObjectId $configServicePrincipal.Id -RoleDefinitionName "Contributor"
   ```
 
 ## Resources
