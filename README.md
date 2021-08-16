@@ -107,7 +107,6 @@ Remove-AzADServicePrincipal -ObjectId $sp.Id -Force
 # Clean-Up User Assigned Managed Identity
 $configAssignment = Get-AzRoleAssignment -ResourceGroupName $rgName | Where-Object {$_.DisplayName.Equals("configDeployer")}
 Remove-AzRoleAssignment -ResourceGroupName $rgName -ObjectId $configAssignment.ObjectId -RoleDefinitionName "Contributor"
-Remove-AzADServicePrincipal -ObjectId $configAssignment.ObjectId -Force
 
   ```
 
