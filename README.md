@@ -1,7 +1,11 @@
 # Azure Purview Demo Environment
 This repository includes template files that can be used to automate the deployment of an Azure Purview demo environment.
 
-## Option 1 - Click Deploy to Azure
+## Deployment Options
+* [Option 1 - Partial Automation](#option-1---partial-automation). Requires an existing Service Principal.
+* [Option 2 - Complete Automation](#option-2---complete-automation). Service Principal created automtically as part of the deployment.
+
+## Option 1 - Partial Automation
 
 ### Prerequisites
 
@@ -40,7 +44,7 @@ Once you have your parameter values ready, click the button below to deploy to A
 
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ftayganr%2Fpurviewdemo%2Fmain%2Fbicep%2Fazuredeploy.json)
 
-## Option 2 - Cloud Shell
+## Option 2 - Complete Automation
 
 ### Prerequisites
 
