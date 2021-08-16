@@ -116,6 +116,7 @@ While ($job.State -eq "Running") {
 # Clean-Up Service Principal
 Remove-AzRoleAssignment -ResourceGroupName $rgName -ObjectId $sp.Id -RoleDefinitionName "Contributor"
 Remove-AzADServicePrincipal -ObjectId $sp.Id -Force
+Remove-AzADApplication -DisplayName $sp.DisplayName -Force
 
 # Clean-Up User Assigned Managed Identity
 $configAssignment = Get-AzRoleAssignment -ResourceGroupName $rgName | Where-Object {$_.DisplayName.Equals("configDeployer")}
@@ -125,7 +126,6 @@ Remove-AzRoleAssignment -ResourceGroupName $rgName -ObjectId $configAssignment.O
 $pv = (Get-AzResource -ResourceGroupName $rgName -ResourceType "Microsoft.Purview/accounts").Name
 cls
 Write-Host "Deployment complete! https://web.purview.azure.com/resource/${pv}`r`nNote: The Azure Data Factory pipeline and Azure Purview scans may still be running, these jobs will complete shortly."
-
   ```
 
 <div align="right"><a href="#azure-purview-demo-environment">↥ back to top</a></div>
