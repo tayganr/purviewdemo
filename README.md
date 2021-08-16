@@ -87,7 +87,7 @@ $sp = New-AzADServicePrincipal -DisplayName "pvDemoServicePrincipal-${suffix}" -
 $templateUri = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/bicep/azuredeploy.json"
 $job = New-AzResourceGroupDeployment `
   -Name "pvDemoTemplate-${suffix}" `
-  -ResourceGroupName $rg.ResourceGroupName `
+  -ResourceGroupName $rgName `
   -TemplateUri $templateUri `
   -objectID $principalId `
   -servicePrincipalObjectID $sp.Id `
@@ -112,6 +112,10 @@ Remove-AzADServicePrincipal -ObjectId $sp.Id -Force
 # Clean-Up User Assigned Managed Identity
 $configAssignment = Get-AzRoleAssignment -ResourceGroupName $rgName | Where-Object {$_.DisplayName.Equals("configDeployer")}
 Remove-AzRoleAssignment -ResourceGroupName $rgName -ObjectId $configAssignment.ObjectId -RoleDefinitionName "Contributor"
+
+# Deployment Complete
+Write-Host "Deployment complete! https://web.purview.azure.com/resource/pvdemo${suffix}-pv"
+Write-Host "Note: The Azure Data Factory pipeline and Azure Purview scans may still be running and will complete shortly.
 
   ```
 
