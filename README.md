@@ -122,9 +122,9 @@ $configAssignment = Get-AzRoleAssignment -ResourceGroupName $rgName | Where-Obje
 Remove-AzRoleAssignment -ResourceGroupName $rgName -ObjectId $configAssignment.ObjectId -RoleDefinitionName "Contributor"
 
 # Deployment Complete
-$pv = (Get-AzResource -ResourceGroupName $rgName -ResourceType "Microsoft.Purview/accounts")
+$pv = (Get-AzResource -ResourceGroupName $rgName -ResourceType "Microsoft.Purview/accounts").Name
 cls
-Write-Host "Deployment complete! https://web.purview.azure.com/resource/${pv.Name}`r`nNote: The Azure Data Factory pipeline and Azure Purview scans may still be running, these jobs will complete shortly."
+Write-Host "Deployment complete! https://web.purview.azure.com/resource/${pv}`r`nNote: The Azure Data Factory pipeline and Azure Purview scans may still be running, these jobs will complete shortly."
 
   ```
 
