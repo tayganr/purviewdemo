@@ -46,6 +46,8 @@ Once you have your parameter values ready, click the button below to deploy to A
 
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ftayganr%2Fpurviewdemo%2Fmain%2Fbicep%2Fazuredeploy.json)
 
+![Azure Portal Custom Deployment UI](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/deploy_to_azure.png)
+
 <div align="right"><a href="#azure-purview-demo-environment">↥ back to top</a></div>
 
 ## Option 2 - Complete Automation
@@ -75,14 +77,14 @@ Invoke-WebRequest $uri -OutFile "preDeploymentScript.ps1"
 * The template should take approximately 10 minutes to complete.
 * Once complete, all Azure resources will have been provisioned, RBAC assignments applied, and data plane operations executed, see below for more details.
 
-Note: An additional 10 minutes may be required for:
+Note: An additional 10 minutes post-deployment may be required for:
 * Azure Data Factory pipeline to finish running and push lineage to Azure Purview.
 * Azure Purview to finish scanning registered sources and populate the catalog.
 * The status of these jobs can be monitored within the respective service.
 
 <div align="right"><a href="#azure-purview-demo-environment">↥ back to top</a></div>
 
-## Resources
+## Deployed Resources
 
 * Azure Purview Account
 * Azure Key Vault
