@@ -1,5 +1,5 @@
 # Azure Purview Demo Environment
-This repository includes template files that can be used to automate the deployment of an Azure Purview demo environment.
+This repository includes template files and instructions on how to automate the deployment of an Azure Purview demo environment.
 
 ## Deployment Options
 * [Option 1 - Partial Automation](#option-1---partial-automation). Requires an existing Service Principal.
