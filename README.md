@@ -45,6 +45,14 @@ Below is the parameters required by the template. It is recommended that you hav
 
 * **Service Principal Client Secret**: This is the Client Secret to a Service Principal (registered application). For more information on how to generate a Client Secret, check out ths tutorial on [Microsoft Docs](https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal#option-2-create-a-new-application-secret).
 
+### Custom Deployment UI
+1. Either select an existing Resource Group and Create New.
+2. Enter your **Azure AD Object ID**.
+3. Enter your **Service Principal Object ID**.
+4. Enter your **Service Principal Client ID**.
+5. Enter your **Service Principal Client Secret**.
+6. Click **Review + create**.
+
 ![Azure Portal Custom Deployment UI](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/deploy_to_azure.png)
 
 <div align="right"><a href="#azure-purview-demo-environment">↥ back to top</a></div>
