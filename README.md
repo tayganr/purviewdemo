@@ -15,6 +15,12 @@ This repository includes template files that can be used to automate the deploym
 * A resource group to which you have [Owner](https://docs.microsoft.com/en-us/azure/role-based-access-control/built-in-roles) permissions. 
 * A [registered application](https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal#register-an-application-with-azure-ad-and-create-a-service-principal) and an [application secret](https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal#option-2-create-a-new-application-secret).
 
+### Usage
+
+Once you have your parameter values ready, click the button below to deploy the template to Azure. For more information on how to retrieve the required parameter values, see the section below.
+
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ftayganr%2Fpurviewdemo%2Fmain%2Fbicep%2Fazuredeploy.json)
+
 ### Parameters
 
 Below is the parameters required by the template. It is recommended that you have these values ready prior to clicking the "Deploy to Azure" button.
@@ -38,13 +44,6 @@ Below is the parameters required by the template. It is recommended that you hav
     ```
 
 * **Service Principal Client Secret**: This is the Client Secret to a Service Principal (registered application). For more information on how to generate a Client Secret, check out ths tutorial on [Microsoft Docs](https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal#option-2-create-a-new-application-secret).
-
-
-### Usage
-
-Once you have your parameter values ready, click the button below to deploy to Azure.
-
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ftayganr%2Fpurviewdemo%2Fmain%2Fbicep%2Fazuredeploy.json)
 
 ![Azure Portal Custom Deployment UI](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/deploy_to_azure.png)
 
