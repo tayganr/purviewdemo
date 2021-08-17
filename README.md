@@ -68,7 +68,7 @@ Invoke-WebRequest "https://raw.githubusercontent.com/tayganr/purviewdemo/main/pr
 ![Azure Portal Cloud Shell](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/azure_portal_cloud_shell.png)
 
 3. Paste the code snippet and provide your Azure AD email address when prompted.
-![PowerShell Azure AD Email Address Prompt](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/powershell_email_prompt.png.png)
+![PowerShell Azure AD Email Address Prompt](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/powershell_email_prompt.png)
 
 The template should take approximately 10 minutes to complete.
 
