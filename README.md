@@ -59,74 +59,20 @@ Once you have your parameter values ready, click the button below to deploy to A
 
 The pre-deployment script below negates the pre-work required in option 1 by automatically creating a resource group, service principal, and application secret. These values are then subsequentally fed into the ARM template as parameter values. 
 
-1. Navigate to the [Azure Portal](https://portal.azure.com) and open the [cloud shell](https://docs.microsoft.com/en-us/azure/cloud-shell/overview).
-2. Copy and paste the PowerShell code snippet below into the cloud shell.
-3. When prompted, provide your Azure AD email address.
+1. Copy the PowerShell code snippet below.
+```powershell
+Invoke-WebRequest "https://raw.githubusercontent.com/tayganr/purviewdemo/main/preDeploymentScript.ps1" -OutFile "preDeploymentScript.ps1"
+.\preDeploymentScript.ps1
+  ```
+2. Navigate to the [Azure Portal](https://portal.azure.com), open the [cloud shell](https://docs.microsoft.com/en-us/azure/cloud-shell/overview).
+![Azure Portal Cloud Shell](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/azure_portal_cloud_shell.png)
+
+3. Paste the code snippet and provide your Azure AD email address when prompted.
+![PowerShell Azure AD Email Address Prompt](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/powershell_email_prompt.png.png)
 
 The template should take approximately 10 minutes to complete.
 
-```powershell
-# Azure AD Object ID
-$principalId = $null
-Do {
-    $emailAddress = Read-Host -Prompt "Please enter your Azure AD email address"
-    $principalId = (Get-AzAdUser -Mail $emailAddress).id
-    if ($principalId -eq $null) { $principalId = (Get-AzAdUser -UserPrincipalName $emailAddress).Id } 
-    if ($principalId -eq $null) { Write-Host "Unable to find a user within the Azure AD with email address: ${emailAddress}. Please try again." }
-} until($principalId -ne $null)
 
-# Suffix
-$suffix = -join ((65..90) + (97..122) | Get-Random -Count 5 | % {[char]$_})
-
-# Location
-$locationList='australiaeast', 'brazilsouth', 'canadacentral', 'centralindia', 'eastus', 'eastus2', 'southcentralus', 'southeastasia', 'uksouth', 'westeurope'
-$location = Get-Random -InputObject $locationList
-
-# Resource Group
-$rg = New-AzResourceGroup -Name "pvdemo-rg-${suffix}" -Location $location
-
-# Service Principal
-$subscriptionId = (Get-AzContext).Subscription.Id
-$rgName = $rg.ResourceGroupName
-$scope = "/subscriptions/${subscriptionId}/resourceGroups/${rgName}"
-$sp = New-AzADServicePrincipal -DisplayName "pvDemoServicePrincipal-${suffix}" -Scope $scope
-
-# Deploy Template
-$templateUri = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/bicep/azuredeploy.json"
-$job = New-AzResourceGroupDeployment `
-  -Name "pvDemoTemplate-${suffix}" `
-  -ResourceGroupName $rgName `
-  -TemplateUri $templateUri `
-  -objectID $principalId `
-  -servicePrincipalObjectID $sp.Id `
-  -servicePrincipalClientID $sp.ApplicationId `
-  -servicePrincipalClientSecret $sp.Secret `
-  -AsJob
-
-$progress = ('.', '..', '...')
-While ($job.State -eq "Running") {
-    Foreach ($x in $progress) {
-        cls
-        Write-Host "Deployment is in progress, this will take approximately 10 minutes"
-        Write-Host "Running${x}"
-        Start-Sleep 1
-    }
-}
-
-# Clean-Up Service Principal
-Remove-AzRoleAssignment -ResourceGroupName $rgName -ObjectId $sp.Id -RoleDefinitionName "Contributor"
-Remove-AzADServicePrincipal -ObjectId $sp.Id -Force
-Remove-AzADApplication -DisplayName $sp.DisplayName -Force
-
-# Clean-Up User Assigned Managed Identity
-$configAssignment = Get-AzRoleAssignment -ResourceGroupName $rgName | Where-Object {$_.DisplayName.Equals("configDeployer")}
-Remove-AzRoleAssignment -ResourceGroupName $rgName -ObjectId $configAssignment.ObjectId -RoleDefinitionName "Contributor"
-
-# Deployment Complete
-$pv = (Get-AzResource -ResourceGroupName $rgName -ResourceType "Microsoft.Purview/accounts").Name
-cls
-Write-Host "Deployment complete! https://web.purview.azure.com/resource/${pv}`r`nNote: The Azure Data Factory pipeline and Azure Purview scans may still be running, these jobs will complete shortly."
-  ```
 
 <div align="right"><a href="#azure-purview-demo-environment">↥ back to top</a></div>
 
