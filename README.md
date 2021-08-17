@@ -61,8 +61,9 @@ The pre-deployment script below negates the pre-work required in option 1 by aut
 
 1. Copy the PowerShell code snippet below.
 ```powershell
-Invoke-WebRequest "https://raw.githubusercontent.com/tayganr/purviewdemo/main/preDeploymentScript.ps1" -OutFile "preDeploymentScript.ps1"
-.\preDeploymentScript.ps1
+$uri = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/preDeploymentScript.ps1"
+Invoke-WebRequest $uri -OutFile "preDeploymentScript.ps1"
+./preDeploymentScript.ps1
   ```
 2. Navigate to the [Azure Portal](https://portal.azure.com), open the [cloud shell](https://docs.microsoft.com/en-us/azure/cloud-shell/overview).
 ![Azure Portal Cloud Shell](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/azure_portal_cloud_shell.png)
