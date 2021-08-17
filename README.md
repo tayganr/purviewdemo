@@ -59,21 +59,26 @@ Once you have your parameter values ready, click the button below to deploy to A
 
 The pre-deployment script below negates the pre-work required in option 1 by automatically creating a resource group, service principal, and application secret. These values are then subsequentally fed into the ARM template as parameter values. 
 
-1. Copy the PowerShell code snippet below.
+1. **Copy** the PowerShell code snippet below.
 ```powershell
 $uri = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/preDeploymentScript.ps1"
 Invoke-WebRequest $uri -OutFile "preDeploymentScript.ps1"
 ./preDeploymentScript.ps1
   ```
-2. Navigate to the [Azure Portal](https://portal.azure.com), open the [cloud shell](https://docs.microsoft.com/en-us/azure/cloud-shell/overview).
+2. Navigate to the [Azure Portal](https://portal.azure.com), open the **Cloud Shell**.
 ![Azure Portal Cloud Shell](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/azure_portal_cloud_shell.png)
 
-3. Paste the code snippet and provide your Azure AD email address when prompted.
+3. **Paste** the code snippet and provide your Azure AD **email address** when prompted.
 ![PowerShell Azure AD Email Address Prompt](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/powershell_email_prompt.png)
 
-The template should take approximately 10 minutes to complete.
+### Outcome
+* The template should take approximately 10 minutes to complete.
+* Once complete, all Azure resources will have been provisioned, RBAC assignments applied, and data plane operations executed, see below for more details.
 
-
+Note: An additional 10 minutes may be required for:
+* Azure Data Factory pipeline to finish running and push lineage to Azure Purview.
+* Azure Purview to finish scanning registered sources and populate the catalog.
+* The status of these jobs can be monitored within the respective service.
 
 <div align="right"><a href="#azure-purview-demo-environment">↥ back to top</a></div>
 
