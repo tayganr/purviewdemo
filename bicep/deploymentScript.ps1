@@ -119,6 +119,43 @@ function runScan([string]$token, [string]$dataSourceName, [string]$scanName) {
     Return $response
 }
 
+# [POST] Create Glossary
+function createGlossary([string]$token) {
+    $uri = "${catalog_endpoint}/api/atlas/v2/glossary"
+    $payload = @{
+        name = "Glossary"
+        qualifiedName = "Glossary"
+    }
+    $params = @{
+        ContentType = "application/json"
+        Headers = @{"Authorization"=$token}
+        Method = "POST"
+        URI = $uri
+        Body = ($payload | ConvertTo-Json -Depth 4)
+    }
+    $response = Invoke-RestMethod @params
+    Return $response
+}
+
+# [POST] Import Glossary Terms
+function importGlossaryTerms([string]$token, [string]$glossaryGuid, [string]$glossaryTermsTemplateUri) {
+    $glossaryTermsFilename = "import-terms-sample.csv"
+    Invoke-RestMethod -Uri $glossaryTermsTemplateUri -OutFile $glossaryTermsFilename
+    $glossaryImportUri = "${catalog_endpoint}/api/atlas/v2/glossary/${glossaryGuid}/terms/import?includeTermHierarchy=true&api-version=2021-05-01-preview"
+    $fieldName = 'file'
+    $filePath = (Get-Item $glossaryTermsFilename).FullName
+    Add-Type -AssemblyName System.Net.Http
+    $client = New-Object System.Net.Http.HttpClient
+    $content = New-Object System.Net.Http.MultipartFormDataContent
+    $fileStream = [System.IO.File]::OpenRead($filePath)
+    $fileContent = New-Object System.Net.Http.StreamContent($fileStream)
+    $content.Add($fileContent, $fieldName, $glossaryTermsFilename)
+    $access_token = $token.split(" ")[1]
+    $client.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", $access_token)
+    $result = $client.PostAsync($glossaryImportUri, $content).Result
+    return $result
+}
+
 # 1. Get Access Token
 $token = getToken $tenant_id $client_id $client_secret
 
@@ -255,39 +292,6 @@ runScan $token $source_adls_payload.name $scan_adls_payload.name
 Invoke-AzDataFactoryV2Pipeline -ResourceGroupName $resource_group -DataFactoryName $adf_name -PipelineName $adf_pipeline_name
 
 # 13. Populate Glossary
-function createGlossary([string]$token) {
-    $uri = "${catalog_endpoint}/api/atlas/v2/glossary"
-    $payload = @{
-        name = "Glossary"
-        qualifiedName = "Glossary"
-    }
-    $params = @{
-        ContentType = "application/json"
-        Headers = @{"Authorization"=$token}
-        Method = "POST"
-        URI = $uri
-        Body = ($payload | ConvertTo-Json -Depth 4)
-    }
-    $response = Invoke-RestMethod @params
-    Return $response
-}
-function importGlossaryTerms([string]$token, [string]$glossaryGuid, [string]$glossaryTermsTemplateUri) {
-    $glossaryTermsFilename = "import-terms-sample.csv"
-    Invoke-RestMethod -Uri $glossaryTermsTemplateUri -OutFile $glossaryTermsFilename
-    $glossaryImportUri = "${catalog_endpoint}/api/atlas/v2/glossary/${glossaryGuid}/terms/import?includeTermHierarchy=true&api-version=2021-05-01-preview"
-    $fieldName = 'file'
-    $filePath = (Get-Item $glossaryTermsFilename).FullName
-    Add-Type -AssemblyName System.Net.Http
-    $client = New-Object System.Net.Http.HttpClient
-    $content = New-Object System.Net.Http.MultipartFormDataContent
-    $fileStream = [System.IO.File]::OpenRead($filePath)
-    $fileContent = New-Object System.Net.Http.StreamContent($fileStream)
-    $content.Add($fileContent, $fieldName, $glossaryTermsFilename)
-    $access_token = $token.split(" ")[1]
-    $client.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", $access_token)
-    $result = $client.PostAsync($glossaryImportUri, $content).Result
-    return $result
-}
 $glossaryGuid = (createGlossary $token).guid
 $glossaryTermsTemplateUri = 'https://raw.githubusercontent.com/tayganr/purviewlab/main/assets/import-terms-sample.csv'
 importGlossaryTerms $token $glossaryGuid $glossaryTermsTemplateUri

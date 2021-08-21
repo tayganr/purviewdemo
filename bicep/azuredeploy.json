@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.4.451.19169",
-      "templateHash": "4646507521520540936"
+      "version": "0.4.613.9944",
+      "templateHash": "6212531949937674214"
     }
   },
   "parameters": {
@@ -299,39 +299,11 @@
       "location": "[variables('location')]",
       "sku": {
         "name": "Standard",
-        "capacity": 4
+        "capacity": 1
       },
       "identity": {
         "type": "SystemAssigned"
       }
-    },
-    {
-      "type": "Microsoft.Authorization/roleAssignments",
-      "apiVersion": "2020-08-01-preview",
-      "scope": "[format('Microsoft.Purview/accounts/{0}', format('pvdemo{0}-pv', variables('suffix')))]",
-      "name": "[guid(format('ra01{0}', variables('rg')))]",
-      "properties": {
-        "principalId": "[parameters('servicePrincipalObjectID')]",
-        "roleDefinitionId": "[variables('role').PurviewDataCurator]",
-        "principalType": "ServicePrincipal"
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Purview/accounts', format('pvdemo{0}-pv', variables('suffix')))]"
-      ]
-    },
-    {
-      "type": "Microsoft.Authorization/roleAssignments",
-      "apiVersion": "2020-08-01-preview",
-      "scope": "[format('Microsoft.Purview/accounts/{0}', format('pvdemo{0}-pv', variables('suffix')))]",
-      "name": "[guid(format('ra02{0}', variables('rg')))]",
-      "properties": {
-        "principalId": "[parameters('servicePrincipalObjectID')]",
-        "roleDefinitionId": "[variables('role').PurviewDataSourceAdministrator]",
-        "principalType": "ServicePrincipal"
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Purview/accounts', format('pvdemo{0}-pv', variables('suffix')))]"
-      ]
     },
     {
       "type": "Microsoft.Sql/servers",
@@ -429,78 +401,6 @@
       "location": "[variables('location')]"
     },
     {
-      "type": "Microsoft.Authorization/roleAssignments",
-      "apiVersion": "2020-08-01-preview",
-      "scope": "[format('Microsoft.Storage/storageAccounts/{0}', format('pvdemo{0}adls', variables('suffix')))]",
-      "name": "[guid(format('ra03{0}', variables('rg')))]",
-      "properties": {
-        "principalId": "[reference(resourceId('Microsoft.Purview/accounts', format('pvdemo{0}-pv', variables('suffix'))), '2020-12-01-preview', 'full').identity.principalId]",
-        "roleDefinitionId": "[variables('role').StorageBlobDataReader]",
-        "principalType": "ServicePrincipal"
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Storage/storageAccounts', format('pvdemo{0}adls', variables('suffix')))]",
-        "[resourceId('Microsoft.Purview/accounts', format('pvdemo{0}-pv', variables('suffix')))]"
-      ]
-    },
-    {
-      "type": "Microsoft.Authorization/roleAssignments",
-      "apiVersion": "2020-08-01-preview",
-      "name": "[guid(format('ra04{0}', variables('rg')))]",
-      "properties": {
-        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'configDeployer')).principalId]",
-        "roleDefinitionId": "[variables('role').Contributor]",
-        "principalType": "ServicePrincipal"
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'configDeployer')]"
-      ]
-    },
-    {
-      "type": "Microsoft.Authorization/roleAssignments",
-      "apiVersion": "2020-08-01-preview",
-      "scope": "[format('Microsoft.Purview/accounts/{0}', format('pvdemo{0}-pv', variables('suffix')))]",
-      "name": "[guid(format('ra05{0}', variables('rg')))]",
-      "properties": {
-        "principalId": "[parameters('objectID')]",
-        "roleDefinitionId": "[variables('role').UserAccessAdministrator]",
-        "principalType": "User"
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Purview/accounts', format('pvdemo{0}-pv', variables('suffix')))]"
-      ]
-    },
-    {
-      "type": "Microsoft.Authorization/roleAssignments",
-      "apiVersion": "2020-08-01-preview",
-      "scope": "[format('Microsoft.Purview/accounts/{0}', format('pvdemo{0}-pv', variables('suffix')))]",
-      "name": "[guid(format('ra06{0}', variables('rg')))]",
-      "properties": {
-        "principalId": "[reference(resourceId('Microsoft.DataFactory/factories', format('pvdemo{0}-adf', variables('suffix'))), '2018-06-01', 'full').identity.principalId]",
-        "roleDefinitionId": "[variables('role').PurviewDataCurator]",
-        "principalType": "ServicePrincipal"
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.DataFactory/factories', format('pvdemo{0}-adf', variables('suffix')))]",
-        "[resourceId('Microsoft.Purview/accounts', format('pvdemo{0}-pv', variables('suffix')))]"
-      ]
-    },
-    {
-      "type": "Microsoft.Authorization/roleAssignments",
-      "apiVersion": "2020-08-01-preview",
-      "scope": "[format('Microsoft.Storage/storageAccounts/{0}', format('pvdemo{0}adls', variables('suffix')))]",
-      "name": "[guid(format('ra07{0}', variables('rg')))]",
-      "properties": {
-        "principalId": "[reference(resourceId('Microsoft.DataFactory/factories', format('pvdemo{0}-adf', variables('suffix'))), '2018-06-01', 'full').identity.principalId]",
-        "roleDefinitionId": "[variables('role').StorageBlobDataContributor]",
-        "principalType": "ServicePrincipal"
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.DataFactory/factories', format('pvdemo{0}-adf', variables('suffix')))]",
-        "[resourceId('Microsoft.Storage/storageAccounts', format('pvdemo{0}adls', variables('suffix')))]"
-      ]
-    },
-    {
       "type": "Microsoft.DataFactory/factories",
       "apiVersion": "2018-06-01",
       "name": "[format('pvdemo{0}-adf', variables('suffix'))]",
@@ -567,6 +467,49 @@
     {
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2020-08-01-preview",
+      "scope": "[format('Microsoft.Storage/storageAccounts/{0}', format('pvdemo{0}adls', variables('suffix')))]",
+      "name": "[guid(format('ra03{0}', variables('rg')))]",
+      "properties": {
+        "principalId": "[reference(resourceId('Microsoft.Purview/accounts', format('pvdemo{0}-pv', variables('suffix'))), '2020-12-01-preview', 'full').identity.principalId]",
+        "roleDefinitionId": "[variables('role').StorageBlobDataReader]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', format('pvdemo{0}adls', variables('suffix')))]",
+        "[resourceId('Microsoft.Purview/accounts', format('pvdemo{0}-pv', variables('suffix')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2020-08-01-preview",
+      "name": "[guid(format('ra04{0}', variables('rg')))]",
+      "properties": {
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'configDeployer')).principalId]",
+        "roleDefinitionId": "[variables('role').Contributor]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'configDeployer')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2020-08-01-preview",
+      "scope": "[format('Microsoft.Storage/storageAccounts/{0}', format('pvdemo{0}adls', variables('suffix')))]",
+      "name": "[guid(format('ra07{0}', variables('rg')))]",
+      "properties": {
+        "principalId": "[reference(resourceId('Microsoft.DataFactory/factories', format('pvdemo{0}-adf', variables('suffix'))), '2018-06-01', 'full').identity.principalId]",
+        "roleDefinitionId": "[variables('role').StorageBlobDataContributor]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DataFactory/factories', format('pvdemo{0}-adf', variables('suffix')))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', format('pvdemo{0}adls', variables('suffix')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2020-08-01-preview",
       "scope": "[format('Microsoft.Storage/storageAccounts/{0}', format('pvdemo{0}synapsedl', variables('suffix')))]",
       "name": "[guid(format('ra08{0}', variables('rg')))]",
       "properties": {
@@ -591,37 +534,6 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.Storage/storageAccounts', format('pvdemo{0}adls', variables('suffix')))]"
-      ]
-    },
-    {
-      "type": "Microsoft.Resources/deploymentScripts",
-      "apiVersion": "2020-10-01",
-      "name": "script",
-      "location": "[variables('location')]",
-      "kind": "AzurePowerShell",
-      "properties": {
-        "azPowerShellVersion": "3.0",
-        "arguments": "[format('-tenant_id {0} -client_id {1} -client_secret {2} -purview_account {3} -vault_uri {4} -admin_login {5} -sql_secret_name {6} -subscription_id {7} -resource_group {8} -location {9} -sql_server_name {10} -sql_db_name {11} -storage_account_name {12} -adf_name {13} -adf_pipeline_name {14} -managed_identity {15}', variables('tenantId'), parameters('servicePrincipalClientID'), parameters('servicePrincipalClientSecret'), format('pvdemo{0}-pv', variables('suffix')), reference(resourceId('Microsoft.KeyVault/vaults', format('pvdemo{0}-keyvault', variables('suffix')))).vaultUri, parameters('sqlServerAdminLogin'), variables('sqlSecretName'), variables('subscriptionId'), variables('rg'), variables('location'), format('pvdemo{0}-sqlsvr', variables('suffix')), format('pvdemo{0}-sqldb', variables('suffix')), format('pvdemo{0}adls', variables('suffix')), format('pvdemo{0}-adf', variables('suffix')), 'copyPipeline', reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'configDeployer')).principalId)]",
-        "primaryScriptUri": "https://raw.githubusercontent.com/tayganr/purviewdemo/main/bicep/deploymentScript.ps1",
-        "forceUpdateTag": "[guid(resourceGroup().id)]",
-        "retentionInterval": "PT4H"
-      },
-      "identity": {
-        "type": "UserAssigned",
-        "userAssignedIdentities": {
-          "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'configDeployer')]": {}
-        }
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.DataFactory/factories', format('pvdemo{0}-adf', variables('suffix')))]",
-        "[resourceId('Microsoft.Storage/storageAccounts', format('pvdemo{0}adls', variables('suffix')))]",
-        "[resourceId('Microsoft.KeyVault/vaults', format('pvdemo{0}-keyvault', variables('suffix')))]",
-        "[resourceId('Microsoft.DataFactory/factories/pipelines', format('pvdemo{0}-adf', variables('suffix')), 'copyPipeline')]",
-        "[resourceId('Microsoft.Purview/accounts', format('pvdemo{0}-pv', variables('suffix')))]",
-        "[resourceId('Microsoft.Authorization/roleAssignments', guid(format('ra04{0}', variables('rg'))))]",
-        "[resourceId('Microsoft.Sql/servers/databases', format('pvdemo{0}-sqlsvr', variables('suffix')), format('pvdemo{0}-sqldb', variables('suffix')))]",
-        "[resourceId('Microsoft.Sql/servers', format('pvdemo{0}-sqlsvr', variables('suffix')))]",
-        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'configDeployer')]"
       ]
     }
   ]
