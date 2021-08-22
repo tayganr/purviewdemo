@@ -24,8 +24,14 @@ function createServicePrincipal([string]$subscriptionId, [string]$resourceGroupN
 function getAccessToken([string]$tenantId, [string]$clientId, [string]$clientSecret, [string]$resource) {
     $requestAccessTokenUri = "https://login.microsoftonline.com/${tenantId}/oauth2/token"
     $body = "grant_type=client_credentials&client_id=${clientId}&client_secret=${clientSecret}&resource=${resource}"
-    $token = Invoke-RestMethod -Method Post -Uri $requestAccessTokenUri -Body $body -ContentType 'application/x-www-form-urlencoded'
-    $accessToken = $token.access_token
+    $accessToken = $null
+    try {
+        $token = Invoke-RestMethod -Method Post -Uri $requestAccessTokenUri -Body $body -ContentType 'application/x-www-form-urlencoded'
+        $accessToken = $token.access_token
+        Write-Host "Access token generated successfully!"
+    } catch {
+        Write-Host "Issue trying to rest token."
+    }
     Return $accessToken
 }
 
@@ -78,13 +84,12 @@ $resourceGroupName = $resourceGroup.ResourceGroupName
 
 # Create Service Principal
 $sp = createServicePrincipal $subscriptionId $resourceGroupName $suffix
-While ($null -eq $sp.secret) {
-    Start-Sleep 1
-}
 $clientId = $sp.ApplicationId
 $clientSecret = $sp.secret | ConvertFrom-SecureString -AsPlainText
-$accessToken = getAccessToken $tenantId $clientId $clientSecret "https://management.core.windows.net/"
-
+$accessToken = $null
+While ($null -eq $accessToken) {
+    $accessToken = getAccessToken $tenantId $clientId $clientSecret "https://management.core.windows.net/"
+}
 # Create Azure Purview Account (as Service Principal)
 $templateLink = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/templates/purviewdeploy.json" 
 $parameters = @{ suffix = @{ value = $suffix } }
