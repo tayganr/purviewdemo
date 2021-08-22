@@ -283,6 +283,9 @@ putMetadataPolicy $token $metadataPolicyId $rootCollectionPolicy
 $collectionSales = putCollection $token "Sales" $purview_account
 $collectionMarketing = putCollection $token "Marketing" $purview_account
 
+$collectionSalesName = $collectionSales.name
+$collectionMarketingName = $collectionMarketing.name
+
 # 5. Create a Source (Azure SQL Database)
 $source_sqldb_payload = @{
     id = "datasources/AzureSqlDatabase"
@@ -290,7 +293,7 @@ $source_sqldb_payload = @{
     name = "AzureSqlDatabase"
     properties = @{
         collection = @{
-            referenceName = $collectionSales.name
+            referenceName = $collectionSalesName
             type = 'CollectionReference'
         }
         location = $location
@@ -340,7 +343,7 @@ $source_adls_payload = @{
     name = "AzureDataLakeStorage"
     properties = @{
         collection = @{
-            referenceName = $collectionMarketing.name
+            referenceName = $collectionMarketingName
             type = 'CollectionReference'
         }
         location = $location
