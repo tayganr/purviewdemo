@@ -100,7 +100,6 @@ $job = New-AzResourceGroupDeployment `
   -ResourceGroupName $resourceGroupName `
   -TemplateUri $templateUri `
   -objectID $principalId `
-  -servicePrincipalObjectID $sp.Id `
   -servicePrincipalClientID $sp.ApplicationId `
   -servicePrincipalClientSecret $sp.Secret `
   -suffix $suffix `
