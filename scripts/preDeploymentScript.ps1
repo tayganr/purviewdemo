@@ -109,7 +109,7 @@ $job = New-AzResourceGroupDeployment `
 $progress = ('.', '..', '...')
 While ($job.State -eq "Running") {
     Foreach ($x in $progress) {
-        cls
+        Clear-Host
         Write-Host "Deployment is in progress, this will take approximately 10 minutes"
         Write-Host "Running${x}"
         Start-Sleep 1
@@ -127,5 +127,5 @@ Remove-AzRoleAssignment -ResourceGroupName $rgName -ObjectId $configAssignment.O
 
 # Deployment Complete
 $pv = (Get-AzResource -ResourceGroupName $rgName -ResourceType "Microsoft.Purview/accounts").Name
-cls
+Clear-Host
 Write-Host "Deployment complete! https://web.purview.azure.com/resource/${pv}`r`nNote: The Azure Data Factory pipeline and Azure Purview scans may still be running, these jobs will complete shortly."
