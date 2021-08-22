@@ -94,18 +94,12 @@ $provisioningState = ""
 While ($provisioningState -ne "Succeeded") {
     Foreach ($x in $progress) {
         Clear-Host
-        Write-Host "Deployment is in progress, this will take approximately 5 minutes"
+        Write-Host "Deployment 1 of 2 is in progress, this will take approximately 5 minutes"
         Write-Host "Running${x}"
         Start-Sleep 1
     }
     $provisioningState = (getDeployment $accessToken $subscriptionId $resourceGroupName $deploymentName).properties.provisioningState
 }
-
-# Do {
-#     Start-Sleep -Seconds 5
-#     $provisioningState = (getDeployment $accessToken $subscriptionId $resourceGroupName $deploymentName).properties.provisioningState
-# } until("Succeeded" -eq $provisioningState)
-# Add logic here to write Running... to screen until complete
 
 # Deploy Template
 $templateUri = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/templates/azuredeploy.json"
@@ -113,7 +107,7 @@ $job = New-AzResourceGroupDeployment `
   -Name "pvDemoTemplate-${suffix}" `
   -ResourceGroupName $resourceGroupName `
   -TemplateUri $templateUri `
-  -objectID $principalId `
+  -azureActiveDirectoryObjectID $principalId `
   -servicePrincipalClientID $sp.ApplicationId `
   -servicePrincipalClientSecret $sp.Secret `
   -suffix $suffix `
@@ -123,7 +117,7 @@ $progress = ('.', '..', '...')
 While ($job.State -eq "Running") {
     Foreach ($x in $progress) {
         Clear-Host
-        Write-Host "Deployment is in progress, this will take approximately 10 minutes"
+        Write-Host "Deployment 2 of 2 is in progress, this will take approximately 10 minutes"
         Write-Host "Running${x}"
         Start-Sleep 1
     }
