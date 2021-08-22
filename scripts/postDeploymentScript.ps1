@@ -320,8 +320,13 @@ $scan_sqldb_payload = @{
             credentialType = "SqlAuth"
             referenceName = $credential_payload.name
         }
+        collection = @{
+            type = "CollectionReference"
+            referenceName = $collectionSalesName
+        }
     }
 }
+
 putScan $token $source_sqldb_payload.name $scan_sqldb_payload
 
 # 7. Trigger Scan
@@ -364,6 +369,10 @@ $scan_adls_payload = @{
     properties = @{
         scanRulesetName = "AdlsGen2"
         scanRulesetType = "System"
+        collection = @{
+            type = "CollectionReference"
+            referenceName = $collectionMarketingName
+        }
     }
 }
 putScan $token $source_adls_payload.name $scan_adls_payload
