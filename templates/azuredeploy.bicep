@@ -1,6 +1,6 @@
 // Parameters
 @description('Please enter your Azure AD Object ID. This can be found by locating your profile within Azure Portal > Azure Active Directory > Users.')
-param objectID string       // Azure AD (Current User)
+param azureActiveDirectoryObjectID string       // Azure AD (Current User)
 @description('Please enter your Service Principal Client ID. PowerShell: $(Get-AzureADServicePrincipal -Filter "DisplayName eq \'YOUR_SERVICE_PRINCIPAL_NAME\'").AppId')
 param servicePrincipalClientID string       // CLIENT_ID
 @secure()
@@ -93,7 +93,7 @@ resource kv 'Microsoft.KeyVault/vaults@2021-04-01-preview' = {
     accessPolicies: [
       {
         tenantId: tenantId
-        objectId: objectID
+        objectId: azureActiveDirectoryObjectID
         permissions:{
           secrets: [
             'get'
@@ -160,9 +160,15 @@ resource adf 'Microsoft.DataFactory/factories@2018-06-01' = {
   location: location
   properties: {
     publicNetworkAccess: 'Enabled'
+    purviewConfiguration: {
+      purviewResourceId: pv.id
+    }
   }
   identity: {
     type: 'SystemAssigned'
+  }
+  tags: {
+    catalogUri: '${pv.name}.catalog.purview.azure.com'
   }
   resource linkedServiceStorage 'linkedservices@2018-06-01' = {
     name: 'AzureDataLakeStorageLinkedService'
@@ -391,7 +397,7 @@ resource roleAssignment9 'Microsoft.Authorization/roleAssignments@2020-08-01-pre
   name: guid('ra09${rg}')
   scope: adls
   properties: {
-    principalId: objectID
+    principalId: azureActiveDirectoryObjectID
     roleDefinitionId: role['StorageBlobDataReader']
     principalType: 'User'
   }
@@ -404,7 +410,7 @@ resource script 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   kind: 'AzurePowerShell'
   properties: {
     azPowerShellVersion: '3.0'
-    arguments: '-tenant_id ${tenantId} -client_id ${servicePrincipalClientID} -client_secret ${servicePrincipalClientSecret} -purview_account ${pv.name} -vault_uri ${kv.properties.vaultUri} -admin_login ${sqlServerAdminLogin} -sql_secret_name ${sqlSecretName} -subscription_id ${subscriptionId} -resource_group ${rg} -location ${location} -sql_server_name ${sqlsvr.name} -sql_db_name ${sqldb.name} -storage_account_name ${adls.name} -adf_name ${adf.name} -adf_pipeline_name ${adf::pipelineCopy.name} -managed_identity ${userAssignedIdentity.properties.principalId}'
+    arguments: '-tenant_id ${tenantId} -user_id ${azureActiveDirectoryObjectID} -client_id ${servicePrincipalClientID} -client_secret ${servicePrincipalClientSecret} -purview_account ${pv.name} -vault_uri ${kv.properties.vaultUri} -admin_login ${sqlServerAdminLogin} -sql_secret_name ${sqlSecretName} -subscription_id ${subscriptionId} -resource_group ${rg} -location ${location} -sql_server_name ${sqlsvr.name} -sql_db_name ${sqldb.name} -storage_account_name ${adls.name} -adf_name ${adf.name} -adf_principal_id ${adf.identity.principalId} -adf_pipeline_name ${adf::pipelineCopy.name} -managed_identity ${userAssignedIdentity.properties.principalId}'
     // scriptContent: loadTextContent('deploymentScript.ps1')
     primaryScriptUri: 'https://raw.githubusercontent.com/tayganr/purviewdemo/main/scripts/postDeploymentScript.ps1'
     forceUpdateTag: guid(resourceGroup().id)

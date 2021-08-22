@@ -88,10 +88,24 @@ $templateLink = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/temp
 $parameters = @{ suffix = @{ value = $suffix } }
 $deployment = deployTemplate $accessToken $templateLink $resourceGroupName $parameters
 $deploymentName = $deployment.name
-Do {
-    Start-Sleep -Seconds 5
+
+$progress = ('.', '..', '...')
+$provisioningState = ""
+While ($provisioningState -ne "Succeeded") {
+    Foreach ($x in $progress) {
+        Clear-Host
+        Write-Host "Deployment is in progress, this will take approximately 5 minutes"
+        Write-Host "Running${x}"
+        Start-Sleep 1
+    }
     $provisioningState = (getDeployment $accessToken $subscriptionId $resourceGroupName $deploymentName).properties.provisioningState
-} until("$Succeeded" -ne $provisioningState)
+}
+
+# Do {
+#     Start-Sleep -Seconds 5
+#     $provisioningState = (getDeployment $accessToken $subscriptionId $resourceGroupName $deploymentName).properties.provisioningState
+# } until("Succeeded" -eq $provisioningState)
+# Add logic here to write Running... to screen until complete
 
 # Deploy Template
 $templateUri = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/templates/azuredeploy.json"

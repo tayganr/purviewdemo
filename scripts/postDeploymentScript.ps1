@@ -1,5 +1,6 @@
 param(
     [string]$tenant_id,
+    [string]$user_id,
     [string]$client_id,
     [string]$client_secret,
     [string]$purview_account,
@@ -13,6 +14,7 @@ param(
     [string]$sql_db_name,
     [string]$storage_account_name,
     [string]$adf_name,
+    [string]$adf_principal_id,
     [string]$adf_pipeline_name,
     [string]$managed_identity
 )
@@ -20,7 +22,7 @@ param(
 # Variables
 $scan_endpoint = "https://${purview_account}.scan.purview.azure.com"
 $catalog_endpoint = "https://${purview_account}.catalog.purview.azure.com"
-$proxy_endpoint = "https://${purview_account}.purview.azure.com/proxy"
+$pv_endpoint = "https://${purview_account}.purview.azure.com"
 
 # [POST] Token
 function getToken([string]$tenant_id, [string]$client_id, [string]$client_secret) {
@@ -78,7 +80,7 @@ function putVault([string]$token, [hashtable]$payload) {
 # [PUT] Credential
 function putCredential([string]$token, [hashtable]$payload) {
     $credentialName = $payload.name
-    $uri = "${proxy_endpoint}/credentials/${credentialName}?api-version=2020-12-01-preview"
+    $uri = "${pv_endpoint}/proxy/credentials/${credentialName}?api-version=2020-12-01-preview"
     $params = @{
         ContentType = "application/json"
         Headers = @{"Authorization"=$token}
@@ -156,6 +158,70 @@ function importGlossaryTerms([string]$token, [string]$glossaryGuid, [string]$glo
     return $result
 }
 
+# [GET] Metadata Policy
+function getMetadataPolicy([string]$token, [string]$collectionName) {
+    $uri = "${pv_endpoint}/policystore/collections/${collectionName}/metadataPolicy?api-version=2021-07-01"
+    $params = @{
+        ContentType = "application/json"
+        Headers = @{"Authorization"=$token}
+        Method = "GET"
+        URI = $uri
+    }
+    $response = Invoke-RestMethod @params
+    Return $response
+}
+
+# [PUT] Metadata Policy
+function putMetadataPolicy([string]$token, [string]$metadataPolicyId, [object]$payload) {
+    $uri = "${pv_endpoint}/policystore/metadataPolicies/${metadataPolicyId}?api-version=2021-07-01"
+    $params = @{
+        ContentType = "application/json"
+        Headers = @{"Authorization"=$token}
+        Body = ($payload | ConvertTo-Json -Depth 10)
+        Method = "PUT"
+        URI = $uri
+    }
+    $response = Invoke-RestMethod @params
+    Return $response
+}
+
+function addRoleAssignment([object]$policy, [string]$principalId, [string]$roleName) {
+    Foreach ($attributeRule in $policy.properties.attributeRules) {
+        if (($attributeRule.name).StartsWith("purviewmetadatarole_builtin_${roleName}:")) {
+            Foreach ($conditionArray in $attributeRule.dnfCondition) {
+                Foreach($condition in $conditionArray) {
+                    if ($condition.attributeName -eq "principal.microsoft.id") {
+                        $condition.attributeValueIncludedIn += $principalId
+                    }
+                 }
+            }
+        }
+    }
+}
+
+# [PUT] Collection
+function putCollection([string]$token, [string]$collectionFriendlyName, [string]$parentCollection) {
+    $collectionName = -join ((97..122) | Get-Random -Count 6 | ForEach-Object {[char]$_})
+    $uri = "${pv_endpoint}/account/collections/${collectionName}?api-version=2019-11-01-preview"
+    $payload = @{
+        "name" = $collectionName
+        "parentCollection"= @{
+            "type" = "CollectionReference"
+            "referenceName" = $parentCollection
+        }
+        "friendlyName" = $collectionFriendlyName
+    }
+    $params = @{
+        ContentType = "application/json"
+        Headers = @{"Authorization"=$token}
+        Body = ($payload | ConvertTo-Json -Depth 10)
+        Method = "PUT"
+        URI = $uri
+    }
+    $response = Invoke-RestMethod @params
+    Return $response
+}
+
 # 1. Get Access Token
 $token = getToken $tenant_id $client_id $client_secret
 
@@ -191,54 +257,72 @@ $credential_payload = @{
 }
 putCredential $token $credential_payload
 
-# # 4. Create a Collection (Contoso)
-# $source_collection_payload = @{
-#     kind = "Collection"
-#     name = "Contoso"
-# }
-# putSource $token $source_collection_payload
-
-# # 5. Create a Source (Azure SQL Database)
-# $source_sqldb_payload = @{
-#     id = "datasources/AzureSqlDatabase"
-#     kind = "AzureSqlDatabase"
-#     name = "AzureSqlDatabase"
-#     properties = @{
-#         collection = ""
-#         location = $location
-#         parentCollection = @{
-#             referenceName = $source_collection_payload.name
-#             type = 'DataSourceReference'
-#         }
-#         resourceGroup = $resource_group
-#         resourceName = $sql_server_name
-#         serverEndpoint = "${sql_server_name}.database.windows.net"
-#         subscriptionId = $subscription_id
-#     }
-# }
-# putSource $token $source_sqldb_payload
-
-# # 6. Create a Scan Configuration
-# $randomId = -join (((48..57)+(65..90)+(97..122)) * 80 |Get-Random -Count 3 |ForEach-Object{[char]$_})
-# $scanName = "Scan-${randomId}"
-# $scan_sqldb_payload = @{
-#     kind = "AzureSqlDatabaseCredential"
-#     name = $scanName
-#     properties = @{
-#         databaseName = $sql_db_name
-#         scanRulesetName = "AzureSqlDatabase"
-#         scanRulesetType = "System"
-#         serverEndpoint = "${sql_server_name}.database.windows.net"
-#         credential = @{
-#             credentialType = "SqlAuth"
-#             referenceName = $credential_payload.name
+# X. Update Root Collection Policy (Add Current User to Built-In Purview Roles)
+$collectionName = $purview_account
+$rootCollectionPolicy = getMetadataPolicy $token $collectionName
+$metadataPolicyId = $rootCollectionPolicy.id
+# Foreach ($attributeRule in $rootCollectionPolicy.properties.attributeRules) {
+#     if (($attributeRule.name).StartsWith("purviewmetadatarole_builtin")) {
+#         Foreach ($conditionArray in $attributeRule.dnfCondition) {
+#             Foreach($condition in $conditionArray) {
+#                 if ($condition.attributeName -eq "principal.microsoft.id") {
+#                     $condition.attributeValueIncludedIn += $user_id
+#                 }
+#              }
 #         }
 #     }
 # }
-# putScan $token $source_sqldb_payload.name $scan_sqldb_payload
+addRoleAssignment $rootCollectionPolicy $user_id "collection-administrator"
+addRoleAssignment $rootCollectionPolicy $user_id "purview-reader"
+addRoleAssignment $rootCollectionPolicy $user_id "data-curator"
+addRoleAssignment $rootCollectionPolicy $user_id "data-source-administrator"
+addRoleAssignment $rootCollectionPolicy $adf_principal_id "data-curator"
+putMetadataPolicy $token $metadataPolicyId $rootCollectionPolicy
 
-# # 7. Trigger Scan
-# runScan $token $source_sqldb_payload.name $scan_sqldb_payload.name
+# X. Create Collections (Sales and Marketing)
+$collectionSales = putCollection $token "Sales" $purview_account
+$collectionMarketing = putCollection $token "Marketing" $purview_account
+
+# 5. Create a Source (Azure SQL Database)
+$source_sqldb_payload = @{
+    id = "datasources/AzureSqlDatabase"
+    kind = "AzureSqlDatabase"
+    name = "AzureSqlDatabase"
+    properties = @{
+        collection = @{
+            referenceName = $collectionSales.name
+            type = 'CollectionReference'
+        }
+        location = $location
+        resourceGroup = $resource_group
+        resourceName = $sql_server_name
+        serverEndpoint = "${sql_server_name}.database.windows.net"
+        subscriptionId = $subscription_id
+    }
+}
+putSource $token $source_sqldb_payload
+
+# 6. Create a Scan Configuration
+$randomId = -join (((48..57)+(65..90)+(97..122)) * 80 |Get-Random -Count 3 |ForEach-Object{[char]$_})
+$scanName = "Scan-${randomId}"
+$scan_sqldb_payload = @{
+    kind = "AzureSqlDatabaseCredential"
+    name = $scanName
+    properties = @{
+        databaseName = $sql_db_name
+        scanRulesetName = "AzureSqlDatabase"
+        scanRulesetType = "System"
+        serverEndpoint = "${sql_server_name}.database.windows.net"
+        credential = @{
+            credentialType = "SqlAuth"
+            referenceName = $credential_payload.name
+        }
+    }
+}
+putScan $token $source_sqldb_payload.name $scan_sqldb_payload
+
+# 7. Trigger Scan
+runScan $token $source_sqldb_payload.name $scan_sqldb_payload.name
 
 # 8. Load Storage Account with Sample Data
 $containerName = "bing"
@@ -249,41 +333,40 @@ Expand-Archive -Path "${containerName}.zip"
 Set-Location -Path "${containerName}"
 Get-ChildItem -File -Recurse | Set-AzStorageBlobContent -Container ${containerName} -Context $storageAccount.Context
 
-# # 9. Create a Source (ADLS Gen2)
-# $source_adls_payload = @{
-#     id = "datasources/AzureDataLakeStorage"
-#     kind = "AdlsGen2"
-#     name = "AzureDataLakeStorage"
-#     properties = @{
-#         collection = ""
-#         location = $location
-#         parentCollection = @{
-#             referenceName = $source_collection_payload.name
-#             type = 'DataSourceReference'
-#         }
-#         endpoint = "https://${storage_account_name}.dfs.core.windows.net/"
-#         resourceGroup = $resource_group
-#         resourceName = $storage_account_name
-#         subscriptionId = $subscription_id
-#     }
-# }
-# putSource $token $source_adls_payload
+# 9. Create a Source (ADLS Gen2)
+$source_adls_payload = @{
+    id = "datasources/AzureDataLakeStorage"
+    kind = "AdlsGen2"
+    name = "AzureDataLakeStorage"
+    properties = @{
+        collection = @{
+            referenceName = $collectionMarketing.name
+            type = 'CollectionReference'
+        }
+        location = $location
+        endpoint = "https://${storage_account_name}.dfs.core.windows.net/"
+        resourceGroup = $resource_group
+        resourceName = $storage_account_name
+        subscriptionId = $subscription_id
+    }
+}
+putSource $token $source_adls_payload
 
-# # 10. Create a Scan Configuration
-# $randomId = -join (((48..57)+(65..90)+(97..122)) * 80 |Get-Random -Count 3 |ForEach-Object{[char]$_})
-# $scanName = "Scan-${randomId}"
-# $scan_adls_payload = @{
-#     kind = "AdlsGen2Msi"
-#     name = $scanName
-#     properties = @{
-#         scanRulesetName = "AdlsGen2"
-#         scanRulesetType = "System"
-#     }
-# }
-# putScan $token $source_adls_payload.name $scan_adls_payload
+# 10. Create a Scan Configuration
+$randomId = -join (((48..57)+(65..90)+(97..122)) * 80 |Get-Random -Count 3 |ForEach-Object{[char]$_})
+$scanName = "Scan-${randomId}"
+$scan_adls_payload = @{
+    kind = "AdlsGen2Msi"
+    name = $scanName
+    properties = @{
+        scanRulesetName = "AdlsGen2"
+        scanRulesetType = "System"
+    }
+}
+putScan $token $source_adls_payload.name $scan_adls_payload
 
-# # 11. Trigger Scan
-# runScan $token $source_adls_payload.name $scan_adls_payload.name
+# 11. Trigger Scan
+runScan $token $source_adls_payload.name $scan_adls_payload.name
 
 # 12. Run ADF Pipeline
 Invoke-AzDataFactoryV2Pipeline -ResourceGroupName $resource_group -DataFactoryName $adf_name -PipelineName $adf_pipeline_name
