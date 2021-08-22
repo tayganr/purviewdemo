@@ -1,8 +1,6 @@
 // Parameters
 @description('Please enter your Azure AD Object ID. This can be found by locating your profile within Azure Portal > Azure Active Directory > Users.')
 param objectID string       // Azure AD (Current User)
-@description('Please enter your Service Principal Object ID. PowerShell: $(Get-AzureADServicePrincipal -Filter "DisplayName eq \'YOUR_SERVICE_PRINCIPAL_NAME\'").ObjectId')
-param servicePrincipalObjectID string     // OBJECT_ID
 @description('Please enter your Service Principal Client ID. PowerShell: $(Get-AzureADServicePrincipal -Filter "DisplayName eq \'YOUR_SERVICE_PRINCIPAL_NAME\'").AppId')
 param servicePrincipalClientID string       // CLIENT_ID
 @secure()
@@ -13,13 +11,13 @@ param sqlServerAdminLogin string = 'sqladmin'
 @secure()
 @description('Please specify a password for the Azure SQL Server administrator. Default value: newGuid().')
 param sqlServerAdminPassword string = newGuid()
+param suffix string
 
 // Variables
 var location = resourceGroup().location
 var tenantId = subscription().tenantId
 var subscriptionId = subscription().subscriptionId
 var rg = resourceGroup().name
-var suffix = substring(uniqueString(rg),0,4)
 var sqlSecretName = 'sql-secret'
 var rdPrefix = '/subscriptions/${subscriptionId}/providers/Microsoft.Authorization/roleDefinitions'
 var role = {
@@ -33,16 +31,8 @@ var role = {
 }
 
 // Azure Purview Account
-resource pv 'Microsoft.Purview/accounts@2020-12-01-preview' = {
+resource pv 'Microsoft.Purview/accounts@2020-12-01-preview' existing = {
   name: 'pvdemo${suffix}-pv'
-  location: location
-  sku: {
-    name: 'Standard'
-    capacity: 1
-  }
-  identity: {
-    type: 'SystemAssigned'
-  }
 }
 
 // Azure SQL Server
@@ -170,15 +160,9 @@ resource adf 'Microsoft.DataFactory/factories@2018-06-01' = {
   location: location
   properties: {
     publicNetworkAccess: 'Enabled'
-    purviewConfiguration: {
-      purviewResourceId: pv.id
-    }
   }
   identity: {
     type: 'SystemAssigned'
-  }
-  tags: {
-    catalogUri: '${pv.name}.catalog.purview.azure.com'
   }
   resource linkedServiceStorage 'linkedservices@2018-06-01' = {
     name: 'AzureDataLakeStorageLinkedService'
@@ -358,28 +342,6 @@ resource sws 'Microsoft.Synapse/workspaces@2021-05-01' = {
   }
 }
 
-// // Assign Purview Data Curator RBAC role to Service Principal
-// resource roleAssignment1 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
-//   name: guid('ra01${rg}')
-//   scope: pv
-//   properties: {
-//     principalId: servicePrincipalObjectID
-//     roleDefinitionId: role['PurviewDataCurator']
-//     principalType: 'ServicePrincipal'
-//   }
-// }
-
-// // Assign Purview Data Source Administrator RBAC role to Service Principal
-// resource roleAssignment2 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
-//   name: guid('ra02${rg}')
-//   scope: pv
-//   properties: {
-//     principalId: servicePrincipalObjectID
-//     roleDefinitionId: role['PurviewDataSourceAdministrator']
-//     principalType: 'ServicePrincipal'
-//   }
-// }
-
 // Assign Storage Blob Data Reader RBAC role to Azure Purview MI
 resource roleAssignment3 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
   name: guid('ra03${rg}')
@@ -401,28 +363,6 @@ resource roleAssignment4 'Microsoft.Authorization/roleAssignments@2020-08-01-pre
     principalType: 'ServicePrincipal'
   }
 }
-
-// // Assign User Access Administrator RBAC role to Current User
-// resource roleAssignment5 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
-//   name: guid('ra05${rg}')
-//   scope: pv
-//   properties: {
-//     principalId: objectID
-//     roleDefinitionId: role['UserAccessAdministrator']
-//     principalType: 'User'
-//   }
-// }
-
-// // Assign Purview Data Curator RBAC role to Azure Data Factory MI
-// resource roleAssignment6 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
-//   name: guid('ra06${rg}')
-//   scope: pv
-//   properties: {
-//     principalId: adf.identity.principalId
-//     roleDefinitionId: role['PurviewDataCurator']
-//     principalType: 'ServicePrincipal'
-//   }
-// }
 
 // Storage Blob Data Contributor RBAC role to Azure Data Factory MI
 resource roleAssignment7 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
@@ -457,28 +397,27 @@ resource roleAssignment9 'Microsoft.Authorization/roleAssignments@2020-08-01-pre
   }
 }
 
-// // Data Plane Operations
-// resource script 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
-//   name: 'script'
-//   location: location
-//   kind: 'AzurePowerShell'
-//   properties: {
-//     azPowerShellVersion: '3.0'
-//     arguments: '-tenant_id ${tenantId} -client_id ${servicePrincipalClientID} -client_secret ${servicePrincipalClientSecret} -purview_account ${pv.name} -vault_uri ${kv.properties.vaultUri} -admin_login ${sqlServerAdminLogin} -sql_secret_name ${sqlSecretName} -subscription_id ${subscriptionId} -resource_group ${rg} -location ${location} -sql_server_name ${sqlsvr.name} -sql_db_name ${sqldb.name} -storage_account_name ${adls.name} -adf_name ${adf.name} -adf_pipeline_name ${adf::pipelineCopy.name} -managed_identity ${userAssignedIdentity.properties.principalId}'
-//     // scriptContent: loadTextContent('deploymentScript.ps1')
-//     primaryScriptUri: 'https://raw.githubusercontent.com/tayganr/purviewdemo/main/bicep/deploymentScript.ps1'
-//     forceUpdateTag: guid(resourceGroup().id)
-//     retentionInterval: 'PT4H' // deploymentScript resource will delete itself in 4 hours
-//   }
-//   identity: {
-//     type: 'UserAssigned'
-//     userAssignedIdentities: {
-//       '${userAssignedIdentity.id}': {}
-//     }
-//   }
-//   dependsOn: [
-//     pv
-//     adls
-//     roleAssignment4
-//   ]
-// }
+// Data Plane Operations
+resource script 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
+  name: 'script'
+  location: location
+  kind: 'AzurePowerShell'
+  properties: {
+    azPowerShellVersion: '3.0'
+    arguments: '-tenant_id ${tenantId} -client_id ${servicePrincipalClientID} -client_secret ${servicePrincipalClientSecret} -purview_account ${pv.name} -vault_uri ${kv.properties.vaultUri} -admin_login ${sqlServerAdminLogin} -sql_secret_name ${sqlSecretName} -subscription_id ${subscriptionId} -resource_group ${rg} -location ${location} -sql_server_name ${sqlsvr.name} -sql_db_name ${sqldb.name} -storage_account_name ${adls.name} -adf_name ${adf.name} -adf_pipeline_name ${adf::pipelineCopy.name} -managed_identity ${userAssignedIdentity.properties.principalId}'
+    // scriptContent: loadTextContent('deploymentScript.ps1')
+    primaryScriptUri: 'https://raw.githubusercontent.com/tayganr/purviewdemo/main/scripts/postDeploymentScript.ps1'
+    forceUpdateTag: guid(resourceGroup().id)
+    retentionInterval: 'PT4H' // deploymentScript resource will delete itself in 4 hours
+  }
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${userAssignedIdentity.id}': {}
+    }
+  }
+  dependsOn: [
+    adls
+    roleAssignment4
+  ]
+}

@@ -29,7 +29,7 @@ function getAccessToken([string]$tenantId, [string]$clientId, [string]$clientSec
     Return $accessToken
 }
 
-function deployTemplate([string]$accessToken, [string]$templateLink, [string]$resourceGroupName) {
+function deployTemplate([string]$accessToken, [string]$templateLink, [string]$resourceGroupName, [hashtable]$parameters) {
     $randomId = -join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object {[char]$_})
     $deploymentName = "deployment-${randomId}"
     $scope = "/subscriptions/${subscriptionId}/resourceGroups/${resourceGroupName}"
@@ -39,6 +39,7 @@ function deployTemplate([string]$accessToken, [string]$templateLink, [string]$re
             "templateLink" = @{
                 "uri" = $templateLink
             }
+            "parameters" = $parameters
             "mode" = "Incremental"
         }
     }
@@ -51,6 +52,17 @@ function deployTemplate([string]$accessToken, [string]$templateLink, [string]$re
     }
     $job = Invoke-RestMethod @params
     Return $job
+}
+
+function getDeployment([string]$accessToken, [string]$subscriptionId, [string]$resourceGroupName, [string]$deploymentName) {
+    $params = @{
+        ContentType = "application/json"
+        Headers = @{"Authorization"="Bearer ${accessToken}"}
+        Method = "GET"
+        URI = "https://management.azure.com/subscriptions/${subscriptionId}/resourcegroups/${resourceGroupName}/providers/Microsoft.Resources/deployments/${deploymentName}?api-version=2021-04-01"
+    }
+    $response = Invoke-RestMethod @params
+    Return $response
 }
 
 # Variables
@@ -66,37 +78,43 @@ $resourceGroupName = $resourceGroup.ResourceGroupName
 
 # Create Service Principal
 $sp = createServicePrincipal $subscriptionId $resourceGroupName $suffix
+Start-Sleep -Seconds 5
 $clientId = $sp.ApplicationId
 $clientSecret = $sp.secret | ConvertFrom-SecureString -AsPlainText
 $accessToken = getAccessToken $tenantId $clientId $clientSecret "https://management.core.windows.net/"
 
 # Create Azure Purview Account (as Service Principal)
-# $templateLink = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/bicep/azuredeploy.json" 
-$job = deployTemplate $accessToken $templateLink $resourceGroupName
+$templateLink = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/templates/purviewdeploy.json" 
+$parameters = @{ suffix = @{ value = $suffix } }
+$deployment = deployTemplate $accessToken $templateLink $resourceGroupName $parameters
+$deploymentName = $deployment.name
+Do {
+    Start-Sleep -Seconds 5
+    $provisioningState = (getDeployment $accessToken $subscriptionId $resourceGroupName $deploymentName).properties.provisioningState
+} until("$Succeeded" -ne $provisioningState)
 
-# PROCEED AS NORMAL, PASS PURVIEW ACCOUNT DETAILS TO TEMPLATE
+# Deploy Template
+$templateUri = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/templates/azuredeploy.json"
+$job = New-AzResourceGroupDeployment `
+  -Name "pvDemoTemplate-${suffix}" `
+  -ResourceGroupName $rgName `
+  -TemplateUri $templateUri `
+  -objectID $principalId `
+  -servicePrincipalObjectID $sp.Id `
+  -servicePrincipalClientID $sp.ApplicationId `
+  -servicePrincipalClientSecret $sp.Secret `
+  -suffix $suffix `
+  -AsJob
 
-# # # Deploy Template
-# # $templateUri = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/bicep/azuredeploy.json"
-# # $job = New-AzResourceGroupDeployment `
-# #   -Name "pvDemoTemplate-${suffix}" `
-# #   -ResourceGroupName $rgName `
-# #   -TemplateUri $templateUri `
-# #   -objectID $principalId `
-# #   -servicePrincipalObjectID $sp.Id `
-# #   -servicePrincipalClientID $sp.ApplicationId `
-# #   -servicePrincipalClientSecret $sp.Secret `
-# #   -AsJob
-
-# $progress = ('.', '..', '...')
-# While ($job.State -eq "Running") {
-#     Foreach ($x in $progress) {
-#         cls
-#         Write-Host "Deployment is in progress, this will take approximately 10 minutes"
-#         Write-Host "Running${x}"
-#         Start-Sleep 1
-#     }
-# }
+$progress = ('.', '..', '...')
+While ($job.State -eq "Running") {
+    Foreach ($x in $progress) {
+        cls
+        Write-Host "Deployment is in progress, this will take approximately 10 minutes"
+        Write-Host "Running${x}"
+        Start-Sleep 1
+    }
+}
 
 # Clean-Up Service Principal
 Remove-AzRoleAssignment -ResourceGroupName $rgName -ObjectId $sp.Id -RoleDefinitionName "Contributor"

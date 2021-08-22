@@ -159,9 +159,6 @@ function importGlossaryTerms([string]$token, [string]$glossaryGuid, [string]$glo
 # 1. Get Access Token
 $token = getToken $tenant_id $client_id $client_secret
 
-# Note: MSI Not currently supported. Error: Audience https://purview.azure.net is not a supported MSI token audience
-# $token = (Get-AzAccessToken -ResourceUrl "https://purview.azure.net").Token
-
 # 2. Create a Key Vault Connection
 $vault_payload = @{
     properties = @{
@@ -194,54 +191,54 @@ $credential_payload = @{
 }
 putCredential $token $credential_payload
 
-# 4. Create a Collection (Contoso)
-$source_collection_payload = @{
-    kind = "Collection"
-    name = "Contoso"
-}
-putSource $token $source_collection_payload
+# # 4. Create a Collection (Contoso)
+# $source_collection_payload = @{
+#     kind = "Collection"
+#     name = "Contoso"
+# }
+# putSource $token $source_collection_payload
 
-# 5. Create a Source (Azure SQL Database)
-$source_sqldb_payload = @{
-    id = "datasources/AzureSqlDatabase"
-    kind = "AzureSqlDatabase"
-    name = "AzureSqlDatabase"
-    properties = @{
-        collection = ""
-        location = $location
-        parentCollection = @{
-            referenceName = $source_collection_payload.name
-            type = 'DataSourceReference'
-        }
-        resourceGroup = $resource_group
-        resourceName = $sql_server_name
-        serverEndpoint = "${sql_server_name}.database.windows.net"
-        subscriptionId = $subscription_id
-    }
-}
-putSource $token $source_sqldb_payload
+# # 5. Create a Source (Azure SQL Database)
+# $source_sqldb_payload = @{
+#     id = "datasources/AzureSqlDatabase"
+#     kind = "AzureSqlDatabase"
+#     name = "AzureSqlDatabase"
+#     properties = @{
+#         collection = ""
+#         location = $location
+#         parentCollection = @{
+#             referenceName = $source_collection_payload.name
+#             type = 'DataSourceReference'
+#         }
+#         resourceGroup = $resource_group
+#         resourceName = $sql_server_name
+#         serverEndpoint = "${sql_server_name}.database.windows.net"
+#         subscriptionId = $subscription_id
+#     }
+# }
+# putSource $token $source_sqldb_payload
 
-# 6. Create a Scan Configuration
-$randomId = -join (((48..57)+(65..90)+(97..122)) * 80 |Get-Random -Count 3 |ForEach-Object{[char]$_})
-$scanName = "Scan-${randomId}"
-$scan_sqldb_payload = @{
-    kind = "AzureSqlDatabaseCredential"
-    name = $scanName
-    properties = @{
-        databaseName = $sql_db_name
-        scanRulesetName = "AzureSqlDatabase"
-        scanRulesetType = "System"
-        serverEndpoint = "${sql_server_name}.database.windows.net"
-        credential = @{
-            credentialType = "SqlAuth"
-            referenceName = $credential_payload.name
-        }
-    }
-}
-putScan $token $source_sqldb_payload.name $scan_sqldb_payload
+# # 6. Create a Scan Configuration
+# $randomId = -join (((48..57)+(65..90)+(97..122)) * 80 |Get-Random -Count 3 |ForEach-Object{[char]$_})
+# $scanName = "Scan-${randomId}"
+# $scan_sqldb_payload = @{
+#     kind = "AzureSqlDatabaseCredential"
+#     name = $scanName
+#     properties = @{
+#         databaseName = $sql_db_name
+#         scanRulesetName = "AzureSqlDatabase"
+#         scanRulesetType = "System"
+#         serverEndpoint = "${sql_server_name}.database.windows.net"
+#         credential = @{
+#             credentialType = "SqlAuth"
+#             referenceName = $credential_payload.name
+#         }
+#     }
+# }
+# putScan $token $source_sqldb_payload.name $scan_sqldb_payload
 
-# 7. Trigger Scan
-runScan $token $source_sqldb_payload.name $scan_sqldb_payload.name
+# # 7. Trigger Scan
+# runScan $token $source_sqldb_payload.name $scan_sqldb_payload.name
 
 # 8. Load Storage Account with Sample Data
 $containerName = "bing"
@@ -252,41 +249,41 @@ Expand-Archive -Path "${containerName}.zip"
 Set-Location -Path "${containerName}"
 Get-ChildItem -File -Recurse | Set-AzStorageBlobContent -Container ${containerName} -Context $storageAccount.Context
 
-# 9. Create a Source (ADLS Gen2)
-$source_adls_payload = @{
-    id = "datasources/AzureDataLakeStorage"
-    kind = "AdlsGen2"
-    name = "AzureDataLakeStorage"
-    properties = @{
-        collection = ""
-        location = $location
-        parentCollection = @{
-            referenceName = $source_collection_payload.name
-            type = 'DataSourceReference'
-        }
-        endpoint = "https://${storage_account_name}.dfs.core.windows.net/"
-        resourceGroup = $resource_group
-        resourceName = $storage_account_name
-        subscriptionId = $subscription_id
-    }
-}
-putSource $token $source_adls_payload
+# # 9. Create a Source (ADLS Gen2)
+# $source_adls_payload = @{
+#     id = "datasources/AzureDataLakeStorage"
+#     kind = "AdlsGen2"
+#     name = "AzureDataLakeStorage"
+#     properties = @{
+#         collection = ""
+#         location = $location
+#         parentCollection = @{
+#             referenceName = $source_collection_payload.name
+#             type = 'DataSourceReference'
+#         }
+#         endpoint = "https://${storage_account_name}.dfs.core.windows.net/"
+#         resourceGroup = $resource_group
+#         resourceName = $storage_account_name
+#         subscriptionId = $subscription_id
+#     }
+# }
+# putSource $token $source_adls_payload
 
-# 10. Create a Scan Configuration
-$randomId = -join (((48..57)+(65..90)+(97..122)) * 80 |Get-Random -Count 3 |ForEach-Object{[char]$_})
-$scanName = "Scan-${randomId}"
-$scan_adls_payload = @{
-    kind = "AdlsGen2Msi"
-    name = $scanName
-    properties = @{
-        scanRulesetName = "AdlsGen2"
-        scanRulesetType = "System"
-    }
-}
-putScan $token $source_adls_payload.name $scan_adls_payload
+# # 10. Create a Scan Configuration
+# $randomId = -join (((48..57)+(65..90)+(97..122)) * 80 |Get-Random -Count 3 |ForEach-Object{[char]$_})
+# $scanName = "Scan-${randomId}"
+# $scan_adls_payload = @{
+#     kind = "AdlsGen2Msi"
+#     name = $scanName
+#     properties = @{
+#         scanRulesetName = "AdlsGen2"
+#         scanRulesetType = "System"
+#     }
+# }
+# putScan $token $source_adls_payload.name $scan_adls_payload
 
-# 11. Trigger Scan
-runScan $token $source_adls_payload.name $scan_adls_payload.name
+# # 11. Trigger Scan
+# runScan $token $source_adls_payload.name $scan_adls_payload.name
 
 # 12. Run ADF Pipeline
 Invoke-AzDataFactoryV2Pipeline -ResourceGroupName $resource_group -DataFactoryName $adf_name -PipelineName $adf_pipeline_name
