@@ -78,7 +78,7 @@ $resourceGroupName = $resourceGroup.ResourceGroupName
 
 # Create Service Principal
 $sp = createServicePrincipal $subscriptionId $resourceGroupName $suffix
-Start-Sleep -Seconds 5
+Start-Sleep -Seconds 10
 $clientId = $sp.ApplicationId
 $clientSecret = $sp.secret | ConvertFrom-SecureString -AsPlainText
 $accessToken = getAccessToken $tenantId $clientId $clientSecret "https://management.core.windows.net/"
