@@ -97,7 +97,7 @@ Do {
 $templateUri = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/templates/azuredeploy.json"
 $job = New-AzResourceGroupDeployment `
   -Name "pvDemoTemplate-${suffix}" `
-  -ResourceGroupName $rgName `
+  -ResourceGroupName $resourceGroupName `
   -TemplateUri $templateUri `
   -objectID $principalId `
   -servicePrincipalObjectID $sp.Id `
