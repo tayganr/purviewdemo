@@ -108,13 +108,13 @@ function putScan([string]$token, [string]$dataSourceName, [hashtable]$payload) {
 }
 
 # [PUT] Run Scan
-function runScan([string]$token, [string]$dataSourceName, [string]$scanName) {
-    $guid = New-Guid
-    $runId = $guid.guid
-    $uri = "${scan_endpoint}/datasources/${dataSourceName}/scans/${scanName}/runs/${runId}?api-version=2018-12-01-preview"
+function runScan([string]$token, [string]$datasourceName, [string]$scanName) {
+    $uri = "${scan_endpoint}/datasources/${datasourceName}/scans/${scanName}/run?api-version=2018-12-01-preview"
+    $payload = @{ scanLevel = "Full" }
     $params = @{
         Headers = @{"Authorization"=$token}
-        Method = "PUT"
+        Body = ($payload | ConvertTo-Json)
+        Method = "POST"
         URI = $uri
     }
     $response = Invoke-RestMethod @params
