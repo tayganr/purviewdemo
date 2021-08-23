@@ -44,17 +44,17 @@ Note: An additional 10 minutes post-deployment may be required for:
 3. Navigate to your Azure Purview Account (e.g. `pvdemo{suffix}-pv`), click Open Purview Studio > Data Map. You should see 3 collections and 2 sources.
 ![Azure Purview Data Map](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/03validate_datamap.png)
 
-4. Within the **Azure SQL Database** source, click **View Details**, you should see a scan. Note: The scan may still be in progress and can take up to 10 minutes to complete.
-![Azure Purview Azure SQL Database Scan](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/04validate_scansql.png)
-
-5. Within the **Azure Data Lake Storage Gen2** source, click **View Details**, you should see a scan. Note: The scan may still be in progress and can take up to 10 minutes to complete.
+4. Within the **Azure Data Lake Storage Gen2** source, click **View Details**, you should see a scan. Note: The scan may still be in progress and can take up to 10 minutes to complete.
 ![Azure Purview Azure Data Lake Storage Gen2 Scan](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/05validate_scanadls.png)
 
-6. Within the **Azure SQL Database** source, click the **New Scan** icon, select a **Database name**, select the **sql-cred** **Credential**, click **Test connection**. The connection should be successful.
-![Azure Purview Azure SQL Database Test Connectivity](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/06validate_credsql.png)
-
-7. Within the **Azure Data Lake Storage Gen2** source, click the **New Scan** icon, click **Test connection**. The connection should be successful.
+5. Within the **Azure Data Lake Storage Gen2** source, click the **New Scan** icon, click **Test connection**. The connection should be successful.
 ![Azure Purview Azure Data Lake Storage Gen2 Test Connectivity](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/07validate_credadls.png)
+
+6. Within the **Azure SQL Database** source, click **View Details**, you should see a scan. Note: The scan may still be in progress and can take up to 10 minutes to complete.
+![Azure Purview Azure SQL Database Scan](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/04validate_scansql.png)
+
+7. Within the **Azure SQL Database** source, click the **New Scan** icon, select a **Database name**, select the **sql-cred** **Credential**, click **Test connection**. The connection should be successful.
+![Azure Purview Azure SQL Database Test Connectivity](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/06validate_credsql.png)
 
 8. Navigate to Data Map > Collections > Role assignments. You should see your user added to each role (Collection admin, Data Source admin, Data curator, Data reader), you should also see the Azure Data Factory Managed Idenity added as a Data Curator.
 ![Azure Purview Role Assignments](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/08validate_roleassignments.png)
