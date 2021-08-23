@@ -91,7 +91,7 @@ While ($null -eq $accessToken) {
     $accessToken = getAccessToken $tenantId $clientId $clientSecret "https://management.core.windows.net/"
 }
 # Create Azure Purview Account (as Service Principal)
-$templateLink = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/templates/purviewdeploy.json" 
+$templateLink = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/templates/json/purviewdeploy.json" 
 $parameters = @{ suffix = @{ value = $suffix } }
 $deployment = deployTemplate $accessToken $templateLink $resourceGroupName $parameters
 $deploymentName = $deployment.name
