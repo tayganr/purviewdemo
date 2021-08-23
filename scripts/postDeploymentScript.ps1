@@ -57,7 +57,20 @@ function putSource([string]$token, [hashtable]$payload) {
         Method = "PUT"
         URI = $uri
     }
-    $response = Invoke-RestMethod @params
+    $retryCount = 0
+    $response = $null
+    while (($null -eq $response) -and ($retryCount -lt 3)) {
+        try {
+            $response = Invoke-RestMethod @params
+        }
+        catch {
+            Write-Host "[Error] Unable to putSource."
+            Write-Host "URI: ${uri}"
+            Write-Host ($payload | ConvertTo-Json)
+            $retryCount += 1
+            $response = $null
+        }
+    }
     Return $response
 }
 
@@ -112,6 +125,7 @@ function runScan([string]$token, [string]$datasourceName, [string]$scanName) {
     $uri = "${scan_endpoint}/datasources/${datasourceName}/scans/${scanName}/run?api-version=2018-12-01-preview"
     $payload = @{ scanLevel = "Full" }
     $params = @{
+        ContentType = "application/json"
         Headers = @{"Authorization"=$token}
         Body = ($payload | ConvertTo-Json)
         Method = "POST"
