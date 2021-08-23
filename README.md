@@ -33,6 +33,26 @@ Note: An additional 10 minutes post-deployment may be required for:
 
 <div align="right"><a href="#azure-purview-demo-environment">↥ back to top</a></div>
 
+## Validate Deployment
+
+![Validate Deployment](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/01validate_deployment.png)
+![Azure Resources](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/02validate_resources.png)
+![Azure Purview Data Map](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/03validate_datamap.png)
+![Azure Purview Azure SQL Database Scan](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/04validate_scansql.png)
+![Azure Purview Azure Data Lake Storage Gen2 Scan](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/05validate_scanadls.png)
+![Azure Purview Azure SQL Database Test Connectivity](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/06validate_credsql.png)
+![Azure Purview Azure Data Lake Storage Gen2 Test Connectivity](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/07validate_credadls.png)
+![Azure Purview Role Assignments](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/08validate_roleassignments.png)
+![Azure Data Factory Integration](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/09validate_adf.png)
+![Azure Purview Glossary](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/10validate_glossary.png)
+![Azure Purview Credential](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/11validate_keyvault.png)
+![Azure Purview Lineage](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/12validate_lineage.png)
+![Azure Synapse Analytics Browse Purview](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/13validate_synapsebrowse.png)
+![Azure Synapse Analytics Query Purview Asset](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/14validate_synapsequery.png)
+
+
+<div align="right"><a href="#azure-purview-demo-environment">↥ back to top</a></div>
+
 ## Deployed Resources
 
 * Azure Purview Account
@@ -62,13 +82,14 @@ Note: An additional 10 minutes post-deployment may be required for:
 | 1  | Identity Provider | Get Access Token |
 | 2  | Azure Purview | Create Azure Key Vault Connection |
 | 3  | Azure Purview | Create Credential |
-| 4  | Azure Purview | Create Collection |
-| 5  | Azure Purview | Azure SQL DB: Register Source |
-| 6  | Azure Purview | Azure SQL DB: Create Scan |
-| 7  | Azure Purview | Azure SQL DB: Run Scan |
-| 8  | Azure Data Lake Storage Gen2 | Load Sample Data |
-| 9  | Azure Purview | ADLS Gen2: Register Source |
-| 10 | Azure Purview | ADLS Gen2: Create Scan |
-| 11 | Azure Purview | ADLS Gen2: Run Scan |
-| 12 | Azure Data Factory | Run Pipeline |
-| 13 | Azure Purview | Populate Glossary |
+| 4  | Azure Purview | Update Root Collection Policy |
+| 5  | Azure Purview | Create Collections |
+| 6  | Azure Purview | Azure SQL DB: Register Source |
+| 7  | Azure Purview | Azure SQL DB: Create Scan |
+| 8  | Azure Purview | Azure SQL DB: Run Scan |
+| 9  | Azure Data Lake Storage Gen2 | Load Sample Data |
+| 10  | Azure Purview | ADLS Gen2: Register Source |
+| 11 | Azure Purview | ADLS Gen2: Create Scan |
+| 12 | Azure Purview | ADLS Gen2: Run Scan |
+| 13 | Azure Data Factory | Run Pipeline |
+| 14 | Azure Purview | Populate Glossary |
