@@ -65,7 +65,7 @@ function putSource([string]$token, [hashtable]$payload) {
         }
         catch {
             Write-Host "[Error] Unable to putSource."
-            Write-Host: "Token: ${token}"
+            Write-Host "Token: ${token}"
             Write-Host "URI: ${uri}"
             Write-Host ($payload | ConvertTo-Json)
             Write-Host "StatusCode:" $_.Exception.Response.StatusCode.value__ 
