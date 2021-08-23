@@ -282,21 +282,10 @@ $credential_payload = @{
 }
 putCredential $token $credential_payload
 
-# X. Update Root Collection Policy (Add Current User to Built-In Purview Roles)
+# 4. Update Root Collection Policy (Add Current User to Built-In Purview Roles)
 $collectionName = $purview_account
 $rootCollectionPolicy = getMetadataPolicy $token $collectionName
 $metadataPolicyId = $rootCollectionPolicy.id
-# Foreach ($attributeRule in $rootCollectionPolicy.properties.attributeRules) {
-#     if (($attributeRule.name).StartsWith("purviewmetadatarole_builtin")) {
-#         Foreach ($conditionArray in $attributeRule.dnfCondition) {
-#             Foreach($condition in $conditionArray) {
-#                 if ($condition.attributeName -eq "principal.microsoft.id") {
-#                     $condition.attributeValueIncludedIn += $user_id
-#                 }
-#              }
-#         }
-#     }
-# }
 addRoleAssignment $rootCollectionPolicy $user_id "collection-administrator"
 addRoleAssignment $rootCollectionPolicy $user_id "purview-reader"
 addRoleAssignment $rootCollectionPolicy $user_id "data-curator"
@@ -304,14 +293,14 @@ addRoleAssignment $rootCollectionPolicy $user_id "data-source-administrator"
 addRoleAssignment $rootCollectionPolicy $adf_principal_id "data-curator"
 putMetadataPolicy $token $metadataPolicyId $rootCollectionPolicy
 
-# X. Create Collections (Sales and Marketing)
+# 5. Create Collections (Sales and Marketing)
 $collectionSales = putCollection $token "Sales" $purview_account
 $collectionMarketing = putCollection $token "Marketing" $purview_account
-
 $collectionSalesName = $collectionSales.name
 $collectionMarketingName = $collectionMarketing.name
+Start-Sleep 30
 
-# 5. Create a Source (Azure SQL Database)
+# 6. Create a Source (Azure SQL Database)
 $source_sqldb_payload = @{
     id = "datasources/AzureSqlDatabase"
     kind = "AzureSqlDatabase"
@@ -330,7 +319,7 @@ $source_sqldb_payload = @{
 }
 putSource $token $source_sqldb_payload
 
-# 6. Create a Scan Configuration
+# 7. Create a Scan Configuration
 $randomId = -join (((48..57)+(65..90)+(97..122)) * 80 |Get-Random -Count 3 |ForEach-Object{[char]$_})
 $scanName = "Scan-${randomId}"
 $scan_sqldb_payload = @{
@@ -351,13 +340,12 @@ $scan_sqldb_payload = @{
         }
     }
 }
-
 putScan $token $source_sqldb_payload.name $scan_sqldb_payload
 
-# 7. Trigger Scan
+# 8. Trigger Scan
 runScan $token $source_sqldb_payload.name $scan_sqldb_payload.name
 
-# 8. Load Storage Account with Sample Data
+# 9. Load Storage Account with Sample Data
 $containerName = "bing"
 $storageAccount = Get-AzStorageAccount -ResourceGroupName $resource_group -Name $storage_account_name
 $RepoUrl = 'https://api.github.com/repos/microsoft/BingCoronavirusQuerySet/zipball/master'
@@ -366,7 +354,7 @@ Expand-Archive -Path "${containerName}.zip"
 Set-Location -Path "${containerName}"
 Get-ChildItem -File -Recurse | Set-AzStorageBlobContent -Container ${containerName} -Context $storageAccount.Context
 
-# 9. Create a Source (ADLS Gen2)
+# 10. Create a Source (ADLS Gen2)
 $source_adls_payload = @{
     id = "datasources/AzureDataLakeStorage"
     kind = "AdlsGen2"
@@ -385,7 +373,7 @@ $source_adls_payload = @{
 }
 putSource $token $source_adls_payload
 
-# 10. Create a Scan Configuration
+# 11. Create a Scan Configuration
 $randomId = -join (((48..57)+(65..90)+(97..122)) * 80 |Get-Random -Count 3 |ForEach-Object{[char]$_})
 $scanName = "Scan-${randomId}"
 $scan_adls_payload = @{
@@ -402,13 +390,13 @@ $scan_adls_payload = @{
 }
 putScan $token $source_adls_payload.name $scan_adls_payload
 
-# 11. Trigger Scan
+# 12. Trigger Scan
 runScan $token $source_adls_payload.name $scan_adls_payload.name
 
-# 12. Run ADF Pipeline
+# 13. Run ADF Pipeline
 Invoke-AzDataFactoryV2Pipeline -ResourceGroupName $resource_group -DataFactoryName $adf_name -PipelineName $adf_pipeline_name
 
-# 13. Populate Glossary
+# 14. Populate Glossary
 $glossaryGuid = (createGlossary $token).guid
 $glossaryTermsTemplateUri = 'https://raw.githubusercontent.com/tayganr/purviewlab/main/assets/import-terms-sample.csv'
 importGlossaryTerms $token $glossaryGuid $glossaryTermsTemplateUri
