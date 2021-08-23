@@ -38,7 +38,7 @@ Note: An additional 10 minutes post-deployment may be required for:
 1. Navigate to the Azure Portal, locate your Resource Group (e.g. `pvdemo-rg-{suffix}`), click Deployments. You should see two deployments that have **Succeded**.
 ![Validate Deployment](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/01validate_deployment.png)
 
-2. Navigate to Azure Portal > Resource Group (e.g. `pvdemo-rg-{suffix}`) > Overview, you should see the following set of Azure resources.
+2. Within your resource group, you should see the following set of Azure resources.
 ![Azure Resources](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/02validate_resources.png)
 
 3. Navigate to Purview Account (e.g. `pvdemo{suffix}-pv`) > Open Purview Studio > Data Map, you should see 3 collections and 2 sources.
