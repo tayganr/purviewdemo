@@ -35,7 +35,7 @@ Note: An additional 10 minutes post-deployment may be required for:
 
 ## Validate Deployment
 
-1. Navigate to Azure Portal > Resource Group (e.g. `pvdemo-rg-{suffix}`) > Deployments, you should see two deployments that have **Succeded**.
+1. Navigate to the Azure Portal, location your Resource Group (e.g. `pvdemo-rg-{suffix}`), click Deployments. You should see two deployments that have **Succeded**.
 ![Validate Deployment](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/01validate_deployment.png)
 
 2. Navigate to Azure Portal > Resource Group (e.g. `pvdemo-rg-{suffix}`) > Overview, you should see the following set of Azure resources.
