@@ -70,6 +70,14 @@ function putSource([string]$token, [hashtable]$payload) {
             Write-Host ($payload | ConvertTo-Json)
             Write-Host "Response:" $_.Exception.Response
             Write-Host "Exception:" $_.Exception
+
+            $result = $_.Exception.Response.GetResponseStream()
+            $reader = New-Object System.IO.StreamReader($result)
+            $reader.BaseStream.Position = 0
+            $reader.DiscardBufferedData()
+            $responseBody = $reader.ReadToEnd();
+            Write-Host $responseBody
+
             $retryCount += 1
             $response = $null
         }
