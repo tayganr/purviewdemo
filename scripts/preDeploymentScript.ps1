@@ -30,7 +30,8 @@ function getAccessToken([string]$tenantId, [string]$clientId, [string]$clientSec
         $accessToken = $token.access_token
         Write-Host "Access token generated successfully!"
     } catch {
-        Write-Host "Issue trying to rest token."
+        Start-Sleep 1
+        Write-Host "Pending access token..."
     }
     Return $accessToken
 }
