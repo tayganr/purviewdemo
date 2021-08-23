@@ -49,7 +49,7 @@ function getToken([string]$tenant_id, [string]$client_id, [string]$client_secret
 # [PUT] Data Source
 function putSource([string]$token, [hashtable]$payload) {
     $dataSourceName = $payload.name
-    $uri = "${scan_endpoint}/datasources/${dataSourceName}"
+    $uri = "${scan_endpoint}/datasources/${dataSourceName}?api-version=2018-12-01-preview"
     $params = @{
         ContentType = "application/json"
         Headers = @{"Authorization"=$token}
@@ -65,8 +65,12 @@ function putSource([string]$token, [hashtable]$payload) {
         }
         catch {
             Write-Host "[Error] Unable to putSource."
+            Write-Host: "Token: ${token}"
             Write-Host "URI: ${uri}"
             Write-Host ($payload | ConvertTo-Json)
+            Write-Host "StatusCode:" $_.Exception.Response.StatusCode.value__ 
+            Write-Host "StatusDescription:" $_.Exception.Response.StatusDescription
+            Write-Host "Exceptiopn:" $_.Exception
             $retryCount += 1
             $response = $null
         }
