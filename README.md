@@ -44,16 +44,16 @@ Note: An additional 10 minutes post-deployment may be required for:
 3. Navigate to your Azure Purview Account (e.g. `pvdemo{suffix}-pv`), click Open Purview Studio > Data Map. You should see 3 collections and 2 sources.
 ![Azure Purview Data Map](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/03validate_datamap.png)
 
-4. Within the Azure SQL Database source, click **View Details**, you should see a scan. Note: The scan may still be in progress and can take up to 10 minutes to complete.
+4. Within the **Azure SQL Database** source, click **View Details**, you should see a scan. Note: The scan may still be in progress and can take up to 10 minutes to complete.
 ![Azure Purview Azure SQL Database Scan](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/04validate_scansql.png)
 
-5. Within the Azure Data Lake Storage Gen2 source, click **View Details**, you should see a scan. Note: The scan may still be in progress and can take up to 10 minutes to complete.
+5. Within the **Azure Data Lake Storage Gen2** source, click **View Details**, you should see a scan. Note: The scan may still be in progress and can take up to 10 minutes to complete.
 ![Azure Purview Azure Data Lake Storage Gen2 Scan](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/05validate_scanadls.png)
 
-6. Within the Azure SQL Database source, click the **New Scan** icon, select a **Database name**, select the sql-cred **Credential**, click **Test connection**. The connection test should be successful.
+6. Within the **Azure SQL Database** source, click the **New Scan** icon, select a **Database name**, select the **sql-cred** **Credential**, click **Test connection**. The connection should be successful.
 ![Azure Purview Azure SQL Database Test Connectivity](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/06validate_credsql.png)
 
-7. Within the Azure Data Lake Storage Gen2 source, click the **New Scan** icon, click **Test connection**. The connection test should be successful.
+7. Within the **Azure Data Lake Storage Gen2** source, click the **New Scan** icon, click **Test connection**. The connection should be successful.
 ![Azure Purview Azure Data Lake Storage Gen2 Test Connectivity](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/07validate_credadls.png)
 
 8. Navigate to Data Map > Collections > Role assignments. You should see your user added to each role (Collection admin, Data Source admin, Data curator, Data reader), you should also see the Azure Data Factory Managed Idenity added as a Data Curator.
@@ -62,16 +62,16 @@ Note: An additional 10 minutes post-deployment may be required for:
 9. Navigate to Management > Data Factory. You should see a Connected Azure Data Factory account.
 ![Azure Data Factory Integration](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/09validate_adf.png)
 
-10. Navigate to Data Catalog > Manage Glossary and click Hierarchical view. You should see a pre-populated Glossary.
+10. Navigate to Data Catalog > Manage Glossary and click **Hierarchical** view. You should see a pre-populated Glossary.
 ![Azure Purview Glossary](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/10validate_glossary.png)
 
 11. Navigate to Management > Credentials. You should see credential from Azure Key Vault.
 ![Azure Purview Credential](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/11validate_keyvault.png)
 
-12. Search for "copy" and navigate to the `Copy_a9c` asset within Purview, click Lineage. You should see lineage from the Azure Data Factory Copy Activity. Note: The pipeline within Azure Data Factory may still be running, this can take up to 10 minutes to complete.
+12. Within the search bar, search for "copy" and navigate to the `Copy_a9c` asset within Purview and then click **Lineage**. You should see lineage from the Azure Data Factory Copy Activity. Note: The pipeline within Azure Data Factory may still be running and can take up to 10 minutes to complete. To check the status of the pipeline, navigate to Azure Data Factory and check Monitoring.
 ![Azure Purview Lineage](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/12validate_lineage.png)
 
-13. Navigate to the Synapse Workspace > Open Synapse Studio > Data, search for "merged", open `merged.parquet`, select Develop > New SQL script > Select top 100.
+13. Navigate to the Synapse Workspace and click Open Synapse Studio > Data, search for "merged", open the `merged.parquet` asset. Within the asset details page, select Develop > New SQL script > Select top 100.
 ![Azure Synapse Analytics Browse Purview](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/13validate_synapsebrowse.png)
 
 14. Click Run to query the parquet file.
