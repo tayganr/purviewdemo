@@ -109,7 +109,7 @@ While ($provisioningState -ne "Succeeded") {
 }
 
 # Deploy Template
-$templateUri = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/templates/azuredeploy.json"
+$templateUri = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/templates/json/azuredeploy.json"
 $job = New-AzResourceGroupDeployment `
   -Name "pvDemoTemplate-${suffix}" `
   -ResourceGroupName $resourceGroupName `

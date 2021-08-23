@@ -68,9 +68,8 @@ function putSource([string]$token, [hashtable]$payload) {
             Write-Host "Token: ${token}"
             Write-Host "URI: ${uri}"
             Write-Host ($payload | ConvertTo-Json)
-            Write-Host "StatusCode:" $_.Exception.Response.StatusCode.value__ 
-            Write-Host "StatusDescription:" $_.Exception.Response.StatusDescription
-            Write-Host "Exceptiopn:" $_.Exception
+            Write-Host "Response:" $_.Exception.Response
+            Write-Host "Exception:" $_.Exception
             $retryCount += 1
             $response = $null
         }
