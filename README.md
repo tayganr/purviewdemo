@@ -41,7 +41,7 @@ Note: An additional 10 minutes post-deployment may be required for:
 2. Within your resource group, you should see the following set of Azure resources.
 ![Azure Resources](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/02validate_resources.png)
 
-3. Navigate to Purview Account (e.g. `pvdemo{suffix}-pv`) > Open Purview Studio > Data Map, you should see 3 collections and 2 sources.
+3. Navigate to your Azure Purview Account (e.g. `pvdemo{suffix}-pv`), click Open Purview Studio > Data Map. You should see 3 collections and 2 sources.
 ![Azure Purview Data Map](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/03validate_datamap.png)
 
 4. Within the Azure SQL Database source, click **View Details**, you should see a scan. Note: The scan may still be in progress and can take up to 10 minutes to complete.
