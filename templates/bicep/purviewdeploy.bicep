@@ -10,4 +10,7 @@ resource pv 'Microsoft.Purview/accounts@2020-12-01-preview' = {
   identity: {
     type: 'SystemAssigned'
   }
+  tags: {
+    resourceByPass: 'allowed'
+  }
 }
