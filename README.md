@@ -5,6 +5,7 @@ This repository includes instructions on how to automate the deployment of a pre
 
 * An active [Azure subscription](https://azure.microsoft.com/en-us/free/).
 * Sufficient access to create resources and register an application.
+* No **Azure Policies** preventing creation of **Storage accounts** or **Event Hub** namespaces. Purview will deploy a managed Storage account and Event Hub when it is created. If a blocking policy exists and needs to remain in place, please follow the [Purview exception tag guide](https://docs.microsoft.com/en-us/azure/purview/create-purview-portal-faq#create-a-policy-exception-for-purview) to create an exception for Purview accounts.
 
 ## Usage
 
