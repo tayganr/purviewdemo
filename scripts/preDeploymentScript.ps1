@@ -1,3 +1,6 @@
+$ErrorActionPreference = "Stop"
+# Error handling - will terminate script if error occurs. 
+
 function getUserPrincipalId() {
     $principalId = $null
     Do {
@@ -72,75 +75,84 @@ function getDeployment([string]$accessToken, [string]$subscriptionId, [string]$r
     Return $response
 }
 
-# Variables
-$tenantId = (Get-AzContext).Tenant.Id
-$subscriptionId = (Get-AzContext).Subscription.Id
-$principalId = getUserPrincipalId
-$suffix = -join ((48..57) + (97..122) | Get-Random -Count 5 | ForEach-Object {[char]$_})
-$location = selectLocation
+try{
+    # Variables
+    $tenantId = (Get-AzContext).Tenant.Id
+    $subscriptionId = (Get-AzContext).Subscription.Id
+    $principalId = getUserPrincipalId
+    $suffix = -join ((48..57) + (97..122) | Get-Random -Count 5 | ForEach-Object {[char]$_})
+    $location = selectLocation
 
-# Create Resource Group
-$resourceGroup = New-AzResourceGroup -Name "pvdemo-rg-${suffix}" -Location $location
-$resourceGroupName = $resourceGroup.ResourceGroupName
+    # Create Resource Group
+    $resourceGroup = New-AzResourceGroup -Name "pvdemo-rg-${suffix}" -Location $location
+    $resourceGroupName = $resourceGroup.ResourceGroupName
 
-# Create Service Principal
-$sp = createServicePrincipal $subscriptionId $resourceGroupName $suffix
-$clientId = $sp.ApplicationId
-$clientSecret = $sp.secret | ConvertFrom-SecureString -AsPlainText
-$accessToken = $null
-While ($null -eq $accessToken) {
-    $accessToken = getAccessToken $tenantId $clientId $clientSecret "https://management.core.windows.net/"
-}
-# Create Azure Purview Account (as Service Principal)
-$templateLink = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/templates/json/purviewdeploy.json" 
-$parameters = @{ suffix = @{ value = $suffix } }
-$deployment = deployTemplate $accessToken $templateLink $resourceGroupName $parameters
-$deploymentName = $deployment.name
-
-$progress = ('.', '..', '...')
-$provisioningState = ""
-While ($provisioningState -ne "Succeeded") {
-    Foreach ($x in $progress) {
-        Clear-Host
-        Write-Host "Deployment 1 of 2 is in progress, this will take approximately 5 minutes"
-        Write-Host "Running${x}"
-        Start-Sleep 1
+    # Create Service Principal
+    $sp = createServicePrincipal $subscriptionId $resourceGroupName $suffix
+    $clientId = $sp.ApplicationId
+    $clientSecret = $sp.secret | ConvertFrom-SecureString -AsPlainText
+    $accessToken = $null
+    While ($null -eq $accessToken) {
+        $accessToken = getAccessToken $tenantId $clientId $clientSecret "https://management.core.windows.net/"
     }
-    $provisioningState = (getDeployment $accessToken $subscriptionId $resourceGroupName $deploymentName).properties.provisioningState
-}
 
-# Deploy Template
-$templateUri = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/templates/json/azuredeploy.json"
-$job = New-AzResourceGroupDeployment `
-  -Name "pvDemoTemplate-${suffix}" `
-  -ResourceGroupName $resourceGroupName `
-  -TemplateUri $templateUri `
-  -azureActiveDirectoryObjectID $principalId `
-  -servicePrincipalClientID $sp.ApplicationId `
-  -servicePrincipalClientSecret $sp.Secret `
-  -suffix $suffix `
-  -AsJob
+    # Create Azure Purview Account (as Service Principal)
+    $templateLink = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/templates/json/purviewdeploy.json" 
+    $parameters = @{ suffix = @{ value = $suffix } }
+    $deployment = deployTemplate $accessToken $templateLink $resourceGroupName $parameters
+    $deploymentName = $deployment.name
 
-$progress = ('.', '..', '...')
-While ($job.State -eq "Running") {
-    Foreach ($x in $progress) {
-        Clear-Host
-        Write-Host "Deployment 2 of 2 is in progress, this will take approximately 10 minutes"
-        Write-Host "Running${x}"
-        Start-Sleep 1
+    $progress = ('.', '..', '...')
+    $provisioningState = ""
+    While ($provisioningState -ne "Succeeded") {
+        Foreach ($x in $progress) {
+            Clear-Host
+            Write-Host "Deployment 1 of 2 is in progress, this will take approximately 5 minutes"
+            Write-Host "Running${x}"
+            Start-Sleep 1
+        }
+        $provisioningState = (getDeployment $accessToken $subscriptionId $resourceGroupName $deploymentName).properties.provisioningState
     }
+
+    # Deploy Template
+    $templateUri = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/templates/json/azuredeploy.json"
+    $job = New-AzResourceGroupDeployment `
+    -Name "pvDemoTemplate-${suffix}" `
+    -ResourceGroupName $resourceGroupName `
+    -TemplateUri $templateUri `
+    -azureActiveDirectoryObjectID $principalId `
+    -servicePrincipalClientID $sp.ApplicationId `
+    -servicePrincipalClientSecret $sp.Secret `
+    -suffix $suffix `
+    -AsJob
+
+    $progress = ('.', '..', '...')
+    While ($job.State -eq "Running") {
+        Foreach ($x in $progress) {
+            Clear-Host
+            Write-Host "Deployment 2 of 2 is in progress, this will take approximately 10 minutes"
+            Write-Host "Running${x}"
+            Start-Sleep 1
+        }
+    }
+
+    # # Clean-Up Service Principal
+    # Remove-AzRoleAssignment -ResourceGroupName $resourceGroupName -ObjectId $sp.Id -RoleDefinitionName "Contributor"
+    # Remove-AzADServicePrincipal -ObjectId $sp.Id -Force
+    # Remove-AzADApplication -DisplayName $sp.DisplayName -Force
+
+    # # Clean-Up User Assigned Managed Identity
+    # $configAssignment = Get-AzRoleAssignment -ResourceGroupName $resourceGroupName | Where-Object {$_.DisplayName.Equals("configDeployer")}
+    # Remove-AzRoleAssignment -ResourceGroupName $resourceGroupName -ObjectId $configAssignment.ObjectId -RoleDefinitionName "Contributor"
+
+    # Deployment Complete
+    $pv = (Get-AzResource -ResourceGroupName $resourceGroupName -ResourceType "Microsoft.Purview/accounts").Name
+    Clear-Host
+    Write-Host "Deployment complete! https://web.purview.azure.com/resource/${pv}`r`nNote: The Azure Data Factory pipeline and Azure Purview scans may still be running, these jobs will complete shortly."
 }
-
-# # Clean-Up Service Principal
-# Remove-AzRoleAssignment -ResourceGroupName $resourceGroupName -ObjectId $sp.Id -RoleDefinitionName "Contributor"
-# Remove-AzADServicePrincipal -ObjectId $sp.Id -Force
-# Remove-AzADApplication -DisplayName $sp.DisplayName -Force
-
-# # Clean-Up User Assigned Managed Identity
-# $configAssignment = Get-AzRoleAssignment -ResourceGroupName $resourceGroupName | Where-Object {$_.DisplayName.Equals("configDeployer")}
-# Remove-AzRoleAssignment -ResourceGroupName $resourceGroupName -ObjectId $configAssignment.ObjectId -RoleDefinitionName "Contributor"
-
-# Deployment Complete
-$pv = (Get-AzResource -ResourceGroupName $resourceGroupName -ResourceType "Microsoft.Purview/accounts").Name
-Clear-Host
-Write-Host "Deployment complete! https://web.purview.azure.com/resource/${pv}`r`nNote: The Azure Data Factory pipeline and Azure Purview scans may still be running, these jobs will complete shortly."
+catch {
+    Write-Output "An error has occured ..." ; Write-Output "$error.Exception"
+}
+finally {
+    Write-Output "Deleting Service Principal: " + $sp.DisplayName; Remove-AzADApplication -ApplicationId $sp.ApplicationId -Force; Write-Output "Deleting Resource Group: " + $resourceGroup.ResourceGroupName; Remove-AzResourceGroup -Name $resourceGroup.ResourceGroupName -Force; $error.clear()
+}
