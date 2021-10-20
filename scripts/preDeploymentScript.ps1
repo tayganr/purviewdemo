@@ -96,6 +96,8 @@ try{
         $accessToken = getAccessToken $tenantId $clientId $clientSecret "https://management.core.windows.net/"
     }
 
+    Start-Sleep 10
+    
     # Create Azure Purview Account (as Service Principal)
     $templateLink = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/templates/json/purviewdeploy.json" 
     $parameters = @{ suffix = @{ value = $suffix } }
