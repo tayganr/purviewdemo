@@ -159,5 +159,5 @@ catch {
 finally {
     $stopTime = Get-Date
     $seconds = ($stopTime - $startTime).TotalSeconds
-    Write-Output -Message "Completed in $seconds seconds"
+    Write-Output "Completed in $seconds seconds"
 }
