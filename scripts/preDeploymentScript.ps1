@@ -1,5 +1,5 @@
-$ErrorActionPreference = "Stop"
-# Error handling - will terminate script if error occurs. 
+$ErrorActionPreference = "Stop" # Error handling - will terminate script if error occurs. 
+$startTime = Get-Date
 
 function getUserPrincipalId() {
     $principalId = $null
@@ -154,7 +154,10 @@ try{
 }
 catch {
     Write-Output "An error has occured ..." ; Write-Output "$error.Exception"
+    Write-Output "Deleting Service Principal: " + $sp.DisplayName; Remove-AzADApplication -ApplicationId $sp.ApplicationId -Force; Write-Output "Deleting Resource Group: " + $resourceGroup.ResourceGroupName; Remove-AzResourceGroup -Name $resourceGroup.ResourceGroupName -Force; $error.clear()
 }
 finally {
-    Write-Output "Deleting Service Principal: " + $sp.DisplayName; Remove-AzADApplication -ApplicationId $sp.ApplicationId -Force; Write-Output "Deleting Resource Group: " + $resourceGroup.ResourceGroupName; Remove-AzResourceGroup -Name $resourceGroup.ResourceGroupName -Force; $error.clear()
+    $stopTime = Get-Date
+    $seconds = ($stopTime - $startTime).TotalSeconds
+    Write-Output -Message "Completed in $seconds seconds"
 }
