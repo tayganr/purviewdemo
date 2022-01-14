@@ -85,8 +85,8 @@ $resourceGroupName = $resourceGroup.ResourceGroupName
 
 # Create Service Principal
 $sp = createServicePrincipal $subscriptionId $resourceGroupName $suffix
-$clientId = $sp.ApplicationId
-$clientSecret = $sp.secret | ConvertFrom-SecureString -AsPlainText
+$clientId = $sp.AppId
+$clientSecret = $sp.PasswordCredentials.SecretText
 $accessToken = $null
 While ($null -eq $accessToken) {
     $accessToken = getAccessToken $tenantId $clientId $clientSecret "https://management.core.windows.net/"
