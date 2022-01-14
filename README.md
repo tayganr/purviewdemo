@@ -12,7 +12,7 @@ This repository includes instructions on how to automate the deployment of a pre
 The pre-deployment script below negates any pre-work required by automatically creating a resource group, service principal, and application secret. These values are then subsequentally fed into the ARM template as parameter values. 
 
 1. **Copy** the PowerShell code snippet below.
-```powershell
+```powershell 
 $uri = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/scripts/preDeploymentScript.ps1"
 Invoke-WebRequest $uri -OutFile "preDeploymentScript.ps1"
 ./preDeploymentScript.ps1
