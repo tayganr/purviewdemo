@@ -111,13 +111,14 @@ While ($provisioningState -ne "Succeeded") {
 
 # Deploy Template
 $templateUri = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/templates/json/azuredeploy.json"
+$secureSecret = ConvertTo-SecureString -AsPlainText $sp.PasswordCredentials.SecretText
 $job = New-AzResourceGroupDeployment `
   -Name "pvDemoTemplate-${suffix}" `
   -ResourceGroupName $resourceGroupName `
   -TemplateUri $templateUri `
   -azureActiveDirectoryObjectID $principalId `
-  -servicePrincipalClientID $sp.ApplicationId `
-  -servicePrincipalClientSecret $sp.Secret `
+  -servicePrincipalClientID $clientId `
+  -servicePrincipalClientSecret $secureSecret `
   -suffix $suffix `
   -AsJob
 
@@ -132,13 +133,13 @@ While ($job.State -eq "Running") {
 }
 
 # # Clean-Up Service Principal
-# Remove-AzRoleAssignment -ResourceGroupName $resourceGroupName -ObjectId $sp.Id -RoleDefinitionName "Contributor"
-# Remove-AzADServicePrincipal -ObjectId $sp.Id -Force
-# Remove-AzADApplication -DisplayName $sp.DisplayName -Force
+Remove-AzRoleAssignment -ResourceGroupName $resourceGroupName -ObjectId $sp.Id -RoleDefinitionName "Owner"
+Remove-AzADServicePrincipal -ObjectId $sp.Id
+Remove-AzADApplication -DisplayName $sp.DisplayName
 
 # # Clean-Up User Assigned Managed Identity
-# $configAssignment = Get-AzRoleAssignment -ResourceGroupName $resourceGroupName | Where-Object {$_.DisplayName.Equals("configDeployer")}
-# Remove-AzRoleAssignment -ResourceGroupName $resourceGroupName -ObjectId $configAssignment.ObjectId -RoleDefinitionName "Contributor"
+$configAssignment = Get-AzRoleAssignment -ResourceGroupName $resourceGroupName | Where-Object {$_.DisplayName.Equals("configDeployer")}
+Remove-AzRoleAssignment -ResourceGroupName $resourceGroupName -ObjectId $configAssignment.ObjectId -RoleDefinitionName "Contributor"
 
 # Deployment Complete
 $pv = (Get-AzResource -ResourceGroupName $resourceGroupName -ResourceType "Microsoft.Purview/accounts").Name
