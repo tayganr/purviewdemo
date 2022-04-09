@@ -123,6 +123,7 @@ Do {
 } until($valid.contains($proceed.ToUpper()))
 
 if ($proceed.ToUpper() -eq "N") {
+    Write-Host "Trying to exit..."
     exit
 }
 
