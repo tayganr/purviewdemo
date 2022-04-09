@@ -1,17 +1,32 @@
-function getUserPrincipalId() {
-    $principalId = $null
+function getUserPrincipalId([string]$userName) {
+    $principalId = (Get-AzAdUser -UserPrincipalName $userName).id
+    <#$principalId = $null
     Do {
         $emailAddress = Read-Host -Prompt "Please enter your Azure AD email address"
         $principalId = (Get-AzAdUser -Mail $emailAddress).id
         if ($null -eq $principalId) { $principalId = (Get-AzAdUser -UserPrincipalName $emailAddress).Id } 
         if ($null -eq $principalId) { Write-Host "Unable to find a user within the Azure AD with email address: ${emailAddress}. Please try again." }
     } until($null -ne $principalId)
+    #>
     Return $principalId
 }
 
 function selectLocation() {
-    $locationList='australiaeast', 'brazilsouth', 'canadacentral', 'centralindia', 'eastus', 'eastus2', 'southcentralus', 'southeastasia', 'uksouth', 'westeurope'
-    $location = Get-Random -InputObject $locationList
+    $location = $null
+    $purviewLocations = (Get-AzLocation | Where-Object {$_.Providers -contains "Microsoft.Purview"}).Location
+    Write-Host "Locations:"
+    Foreach ($x in $purviewLocations | Sort-Object) {
+        Write-Host " - $x"
+    }
+    Do {
+        $location = Read-Host -Prompt "Please enter a valid location"
+        If ($purviewLocations -contains $location) {
+            continue
+        } else {
+            Write-Host "$location is an invalid location"
+            $location = $null
+        }
+    } until($null -ne $location)
     Return $location
 }
 
@@ -57,7 +72,13 @@ function deployTemplate([string]$accessToken, [string]$templateLink, [string]$re
         Method = "PUT"
         URI = $deploymentUri
     }
-    $job = Invoke-RestMethod @params
+    $job = $null
+    try {
+        $job = Invoke-RestMethod @params
+    } catch {
+        Write-Host "[Error] Something went wrong when trying to deploy the template."
+        Write-Host $_.Exception
+    }
     Return $job
 }
 
@@ -73,28 +94,71 @@ function getDeployment([string]$accessToken, [string]$subscriptionId, [string]$r
 }
 
 # Variables
-$tenantId = (Get-AzContext).Tenant.Id
-$subscriptionId = (Get-AzContext).Subscription.Id
-$principalId = getUserPrincipalId
+$azContext = Get-AzContext
+$tenantId = $azContext.Tenant.Id
+$subscriptionId = $azContext.Subscription.Id
+$subscriptionName = $azContext.Subscription.Name
+$userName = ((az account show) | ConvertFrom-Json -Depth 10).user.name
+$principalId = getUserPrincipalId $userName
+$context = [PSCustomObject]@{
+    TenantID = $tenantId
+    SubscriptionName = $subscriptionName
+    SubscriptionId = $subscriptionId
+    UserName = $userName
+    PrincipalID = $principalId
+}
+
+# Confirm Environment Context
+Write-Host("`r`nThe Azure Purview demo will be deployed in the following environment.`n`n{0}" -f ($context | Format-Table | Out-String))
+:pointer Do {
+    $valid = "Y", "N"
+    $proceed = Read-Host -Prompt "Would you like to proceed? (Y/N)"
+    If ($proceed.ToUpper() -eq "Y") {
+        continue
+    } elseif ($proceed.ToUpper() -eq "N") {
+        break pointer
+    } else {
+        Write-Host "$proceed is an invalid response."
+    }
+} until($valid.contains($proceed.ToUpper()))
+
+# Resource Providers
+$registeredResourceProviders = Get-AzResourceProvider | Select-Object ProviderNamespace 
+$requiredResourceProviders = @("Microsoft.Authorization","Microsoft.DataFactory","Microsoft.EventHub","Microsoft.KeyVault","Microsoft.Purview","Microsoft.Storage","Microsoft.Sql","Microsoft.Synapse")
+write-host "`n"
+Write-Host "[INFO] Checking that the required resource providers are registered..."
+foreach ($rp in $requiredResourceProviders) {
+    if ($registeredResourceProviders -match $rp) {
+        Write-Host "  [OK] ${rp}"
+    } else {
+        Write-Host "The following resource provider is not registered: ${rp}" -ForegroundColor Black -BackgroundColor Yellow
+        Write-Host "Attempting to register resource provider: ${rp}"
+        Register-AzResourceProvider -ProviderNamespace $rp
+        Do {
+            $regState = (Get-AzResourceProvider -ProviderNamespace Microsoft.Purview)[0].RegistrationState
+            Clear-Host
+            Write-Host "Registration in progress for resource provider: ${rp}. Current state: ${regState}."
+            Start-Sleep 5
+        } until($regState -eq "Registered")
+        Write-Host "  [OK] ${rp}"
+    }
+}
+
 $suffix = -join ((48..57) + (97..122) | Get-Random -Count 5 | ForEach-Object {[char]$_})
 $location = selectLocation
 
 # Create Resource Group
 $resourceGroup = New-AzResourceGroup -Name "pvdemo-rg-${suffix}" -Location $location
 $resourceGroupName = $resourceGroup.ResourceGroupName
+Write-Host "Resource Group: $resourceGroupName"
 
-# Create Service Principal
-$sp = createServicePrincipal $subscriptionId $resourceGroupName $suffix
-$clientId = $sp.AppId
-$clientSecret = $sp.PasswordCredentials.SecretText
-$accessToken = $null
-While ($null -eq $accessToken) {
-    $accessToken = getAccessToken $tenantId $clientId $clientSecret "https://management.core.windows.net/"
-}
 # Create Azure Purview Account (as Service Principal)
 $templateLink = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/templates/json/purviewdeploy.json" 
 $parameters = @{ suffix = @{ value = $suffix } }
 $deployment = deployTemplate $accessToken $templateLink $resourceGroupName $parameters
+:pointer2 if ($null -eq $deployment) {
+    break pointer2
+}
 $deploymentName = $deployment.name
 
 $progress = ('.', '..', '...')
@@ -109,6 +173,15 @@ While ($provisioningState -ne "Succeeded") {
     $provisioningState = (getDeployment $accessToken $subscriptionId $resourceGroupName $deploymentName).properties.provisioningState
 }
 
+# Create Service Principal
+$sp = createServicePrincipal $subscriptionId $resourceGroupName $suffix
+$clientId = $sp.AppId
+$clientSecret = $sp.PasswordCredentials.SecretText
+$accessToken = $null
+While ($null -eq $accessToken) {
+    $accessToken = getAccessToken $tenantId $clientId $clientSecret "https://management.core.windows.net/"
+}
+
 # Deploy Template
 $templateUri = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/templates/json/azuredeploy.json"
 $secureSecret = ConvertTo-SecureString -AsPlainText $sp.PasswordCredentials.SecretText
@@ -121,6 +194,12 @@ $job = New-AzResourceGroupDeployment `
   -servicePrincipalClientSecret $secureSecret `
   -suffix $suffix `
   -AsJob
+
+:pointer3 if ($job.State -ne "Running") {
+    Write-Host "[Error] Something went wrong with deployment 2."
+    $job | Format-List -Property *
+    break pointer3
+}
 
 $progress = ('.', '..', '...')
 While ($job.State -eq "Running") {
