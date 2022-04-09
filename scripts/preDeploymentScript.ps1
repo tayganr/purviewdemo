@@ -14,6 +14,7 @@ function getUserPrincipalId([string]$userName) {
 function selectLocation() {
     $location = $null
     $purviewLocations = (Get-AzLocation | Where-Object {$_.Providers -contains "Microsoft.Purview"}).Location
+    Write-Host "`r`n"
     Write-Host "Locations:"
     Foreach ($x in $purviewLocations | Sort-Object) {
         Write-Host " - $x"
@@ -156,6 +157,15 @@ $resourceGroup = New-AzResourceGroup -Name "pvdemo-rg-${suffix}" -Location $loca
 $resourceGroupName = $resourceGroup.ResourceGroupName
 Write-Host "Resource Group: $resourceGroupName"
 
+# Create Service Principal
+$sp = createServicePrincipal $subscriptionId $resourceGroupName $suffix
+$clientId = $sp.AppId
+$clientSecret = $sp.PasswordCredentials.SecretText
+$accessToken = $null
+While ($null -eq $accessToken) {
+    $accessToken = getAccessToken $tenantId $clientId $clientSecret "https://management.core.windows.net/"
+}
+
 # Create Azure Purview Account (as Service Principal)
 $templateLink = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/templates/json/purviewdeploy.json" 
 $parameters = @{ suffix = @{ value = $suffix } }
@@ -173,15 +183,6 @@ While ($provisioningState -ne "Succeeded") {
         Start-Sleep 1
     }
     $provisioningState = (getDeployment $accessToken $subscriptionId $resourceGroupName $deploymentName).properties.provisioningState
-}
-
-# Create Service Principal
-$sp = createServicePrincipal $subscriptionId $resourceGroupName $suffix
-$clientId = $sp.AppId
-$clientSecret = $sp.PasswordCredentials.SecretText
-$accessToken = $null
-While ($null -eq $accessToken) {
-    $accessToken = getAccessToken $tenantId $clientId $clientSecret "https://management.core.windows.net/"
 }
 
 # Deploy Template
