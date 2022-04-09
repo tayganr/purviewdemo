@@ -110,7 +110,7 @@ $context = [PSCustomObject]@{
 
 # Confirm Environment Context
 Write-Host("`r`nThe Azure Purview demo will be deployed in the following environment.`n`n{0}" -f ($context | Format-Table | Out-String))
-:pointer Do {
+Do {
     $valid = "Y", "N"
     $proceed = Read-Host -Prompt "Would you like to proceed? (Y/N)"
     If ($proceed.ToUpper() -eq "Y") {
@@ -121,6 +121,10 @@ Write-Host("`r`nThe Azure Purview demo will be deployed in the following environ
         Write-Host "$proceed is an invalid response."
     }
 } until($valid.contains($proceed.ToUpper()))
+
+if ($proceed.ToUpper() -eq "N") {
+    exit
+}
 
 # Resource Providers
 $registeredResourceProviders = Get-AzResourceProvider | Select-Object ProviderNamespace 
