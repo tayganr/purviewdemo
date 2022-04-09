@@ -135,13 +135,13 @@ foreach ($rp in $requiredResourceProviders) {
     if ($registeredResourceProviders -match $rp) {
         Write-Host "  [OK] ${rp}"
     } else {
-        Write-Host "`n"
+        Write-Host "`r`n"
         Write-Host "The following resource provider is not registered: ${rp}" -ForegroundColor Black -BackgroundColor Yellow
         Write-Host "Attempting to register resource provider: ${rp}"
         Register-AzResourceProvider -ProviderNamespace $rp
         Do {
             $regState = (Get-AzResourceProvider -ProviderNamespace Microsoft.Purview)[0].RegistrationState
-            Write-Host -NoNewline "Registration in progress for resource provider: ${rp}. Current state: ${regState}."
+            Write-Progress "Registration in progress for resource provider: ${rp}. Current state: ${regState}."
             Start-Sleep 5
         } until($regState -eq "Registered")
         Write-Host "  [OK] ${rp}"
@@ -169,7 +169,7 @@ $progress = ('.', '..', '...')
 $provisioningState = ""
 While ($provisioningState -ne "Succeeded") {
     Foreach ($x in $progress) {
-        Write-Host -NoNewline "Deployment 1 of 2 is in progress, this will take approximately 5 minutes${x}"
+        Write-Progress "Deployment 1 of 2 is in progress, this will take approximately 5 minutes${x}"
         Start-Sleep 1
     }
     $provisioningState = (getDeployment $accessToken $subscriptionId $resourceGroupName $deploymentName).properties.provisioningState
@@ -206,7 +206,7 @@ if ($job.State -ne "Running") {
 $progress = ('.', '..', '...')
 While ($job.State -eq "Running") {
     Foreach ($x in $progress) {
-        Write-Host -NoNewline "Deployment 2 of 2 is in progress, this will take approximately 10 minutes${x}"
+        Write-Progress "Deployment 2 of 2 is in progress, this will take approximately 10 minutes${x}"
         Start-Sleep 1
     }
 }
