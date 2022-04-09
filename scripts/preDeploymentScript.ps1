@@ -121,7 +121,6 @@ Do {
         Write-Host "$proceed is an invalid response."
     }
 } until($valid.contains($proceed.ToUpper()))
-
 if ($proceed.ToUpper() -eq "N") {
     Write-Host "Trying to exit..."
     exit
@@ -130,12 +129,13 @@ if ($proceed.ToUpper() -eq "N") {
 # Resource Providers
 $registeredResourceProviders = Get-AzResourceProvider | Select-Object ProviderNamespace 
 $requiredResourceProviders = @("Microsoft.Authorization","Microsoft.DataFactory","Microsoft.EventHub","Microsoft.KeyVault","Microsoft.Purview","Microsoft.Storage","Microsoft.Sql","Microsoft.Synapse")
-write-host "`n"
+Write-Host "`n"
 Write-Host "[INFO] Checking that the required resource providers are registered..."
 foreach ($rp in $requiredResourceProviders) {
     if ($registeredResourceProviders -match $rp) {
         Write-Host "  [OK] ${rp}"
     } else {
+        Write-Host "`n"
         Write-Host "The following resource provider is not registered: ${rp}" -ForegroundColor Black -BackgroundColor Yellow
         Write-Host "Attempting to register resource provider: ${rp}"
         Register-AzResourceProvider -ProviderNamespace $rp
