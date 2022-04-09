@@ -142,9 +142,10 @@ foreach ($rp in $requiredResourceProviders) {
         Register-AzResourceProvider -ProviderNamespace $rp
         Do {
             $regState = (Get-AzResourceProvider -ProviderNamespace Microsoft.Purview)[0].RegistrationState
-            Write-Progress "Registration in progress for resource provider: ${rp}. Current state: ${regState}."
+            Write-Progress -Activity "Registration in progress for resource provider: ${rp}." -Status "Progress" -PercentComplete -1
             Start-Sleep 5
         } until($regState -eq "Registered")
+        Write-Progress -Activity "Registration in progress for resource provider: ${rp}." -Completed
         Write-Host "  [OK] ${rp}"
     }
 }
@@ -174,16 +175,13 @@ if ($null -eq $deployment) {
     exit
 }
 $deploymentName = $deployment.name
-
-$progress = ('.', '..', '...')
 $provisioningState = ""
 While ($provisioningState -ne "Succeeded") {
-    Foreach ($x in $progress) {
-        Write-Progress "Deployment 1 of 2 is in progress, this will take approximately 5 minutes${x}"
-        Start-Sleep 1
-    }
+    Write-Progress -Activity "Deployment 1 of 2 is in progress, this will take approximately 5 minutes." -Status "Progress" -PercentComplete -1
+    Start-Sleep 5
     $provisioningState = (getDeployment $accessToken $subscriptionId $resourceGroupName $deploymentName).properties.provisioningState
 }
+Write-Progress -Activity "Deployment 1 of 2 is in progress, this will take approximately 5 minutes." -Completed
 
 # Deploy Template
 $templateUri = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/templates/json/azuredeploy.json"
@@ -204,13 +202,11 @@ if ($job.State -ne "Running") {
     exit
 }
 
-$progress = ('.', '..', '...')
 While ($job.State -eq "Running") {
-    Foreach ($x in $progress) {
-        Write-Progress "Deployment 2 of 2 is in progress, this will take approximately 10 minutes${x}"
-        Start-Sleep 1
-    }
+    Write-Progress -Activity "Deployment 2 of 2 is in progress, this will take approximately 10 minutes." -Status "Progress" -PercentComplete -1
+    Start-Sleep 1
 }
+Write-Progress -Activity "Deployment 2 of 2 is in progress, this will take approximately 10 minutes." -Completed
 
 # # Clean-Up Service Principal
 Remove-AzRoleAssignment -ResourceGroupName $resourceGroupName -ObjectId $sp.Id -RoleDefinitionName "Owner"
