@@ -116,7 +116,7 @@ Write-Host("`r`nThe Azure Purview demo will be deployed in the following environ
     If ($proceed.ToUpper() -eq "Y") {
         continue
     } elseif ($proceed.ToUpper() -eq "N") {
-        break pointer
+        Exit-PSSession
     } else {
         Write-Host "$proceed is an invalid response."
     }
@@ -155,11 +155,9 @@ Write-Host "Resource Group: $resourceGroupName"
 $templateLink = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/templates/json/purviewdeploy.json" 
 $parameters = @{ suffix = @{ value = $suffix } }
 $deployment = deployTemplate $accessToken $templateLink $resourceGroupName $parameters
-:pointer2 Do {
-    if ($null -eq $deployment) {
-    break pointer2
-    }
-} until ($null -ne $deployment)
+if ($null -eq $deployment) {
+    Exit-PSSession
+}
 $deploymentName = $deployment.name
 
 $progress = ('.', '..', '...')
@@ -197,7 +195,7 @@ $job = New-AzResourceGroupDeployment `
 if ($job.State -ne "Running") {
     Write-Host "[Error] Something went wrong with deployment 2."
     $job | Format-List -Property *
-    break
+    Exit-PSSession
 }
 
 $progress = ('.', '..', '...')
