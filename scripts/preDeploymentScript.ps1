@@ -76,7 +76,7 @@ function deployTemplate([string]$accessToken, [string]$templateLink, [string]$re
     try {
         $job = Invoke-RestMethod @params
     } catch {
-        Write-Host "[Error] Something went wrong when trying to deploy the template."
+        Write-Host "[Error] Something went wrong when trying to deploy the template." -ForegroundColor White -BackgroundColor Red
         Write-Host $_.Exception
     }
     Return $job
@@ -136,8 +136,7 @@ foreach ($rp in $requiredResourceProviders) {
         Register-AzResourceProvider -ProviderNamespace $rp
         Do {
             $regState = (Get-AzResourceProvider -ProviderNamespace Microsoft.Purview)[0].RegistrationState
-            Clear-Host
-            Write-Host "Registration in progress for resource provider: ${rp}. Current state: ${regState}."
+            Write-Host -NoNewline "Registration in progress for resource provider: ${rp}. Current state: ${regState}."
             Start-Sleep 5
         } until($regState -eq "Registered")
         Write-Host "  [OK] ${rp}"
@@ -156,18 +155,18 @@ Write-Host "Resource Group: $resourceGroupName"
 $templateLink = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/templates/json/purviewdeploy.json" 
 $parameters = @{ suffix = @{ value = $suffix } }
 $deployment = deployTemplate $accessToken $templateLink $resourceGroupName $parameters
-:pointer2 if ($null -eq $deployment) {
+:pointer2 Do {
+    if ($null -eq $deployment) {
     break pointer2
-}
+    }
+} until ($null -ne $deployment)
 $deploymentName = $deployment.name
 
 $progress = ('.', '..', '...')
 $provisioningState = ""
 While ($provisioningState -ne "Succeeded") {
     Foreach ($x in $progress) {
-        Clear-Host
-        Write-Host "Deployment 1 of 2 is in progress, this will take approximately 5 minutes"
-        Write-Host "Running${x}"
+        Write-Host -NoNewline "Deployment 1 of 2 is in progress, this will take approximately 5 minutes${x}"
         Start-Sleep 1
     }
     $provisioningState = (getDeployment $accessToken $subscriptionId $resourceGroupName $deploymentName).properties.provisioningState
@@ -195,18 +194,16 @@ $job = New-AzResourceGroupDeployment `
   -suffix $suffix `
   -AsJob
 
-:pointer3 if ($job.State -ne "Running") {
+if ($job.State -ne "Running") {
     Write-Host "[Error] Something went wrong with deployment 2."
     $job | Format-List -Property *
-    break pointer3
+    break
 }
 
 $progress = ('.', '..', '...')
 While ($job.State -eq "Running") {
     Foreach ($x in $progress) {
-        Clear-Host
-        Write-Host "Deployment 2 of 2 is in progress, this will take approximately 10 minutes"
-        Write-Host "Running${x}"
+        Write-Host -NoNewline "Deployment 2 of 2 is in progress, this will take approximately 10 minutes${x}"
         Start-Sleep 1
     }
 }
@@ -222,5 +219,4 @@ Remove-AzRoleAssignment -ResourceGroupName $resourceGroupName -ObjectId $configA
 
 # Deployment Complete
 $pv = (Get-AzResource -ResourceGroupName $resourceGroupName -ResourceType "Microsoft.Purview/accounts").Name
-Clear-Host
 Write-Host "Deployment complete! https://web.purview.azure.com/resource/${pv}`r`nNote: The Azure Data Factory pipeline and Azure Purview scans may still be running, these jobs will complete shortly."
