@@ -171,7 +171,7 @@ $location = selectLocation
 $resourceGroup = New-AzResourceGroup -Name "pvdemo-rg-${suffix}" -Location $location
 $resourceGroupName = $resourceGroup.ResourceGroupName
 Write-Host "`r`n"
-Write-Host "[INFO] Resource Group: $resourceGroupName"
+Write-Host "[INFO] Resource Group: $resourceGroupName`r`n"
 
 # Create Service Principal
 $sp = createServicePrincipal $subscriptionId $resourceGroupName $suffix
