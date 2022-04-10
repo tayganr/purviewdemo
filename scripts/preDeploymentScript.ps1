@@ -74,12 +74,23 @@ function deployTemplate([string]$accessToken, [string]$templateLink, [string]$re
         URI = $deploymentUri
     }
     $job = $null
-    try {
-        $job = Invoke-RestMethod @params
-    } catch {
-        Write-Host "[Error] Something went wrong when trying to deploy the template." -ForegroundColor White -BackgroundColor Red
-        Write-Host $_.Exception
+
+    $completed = $false
+    $retries = 0 
+    while (-not $completed -and $retries -lt 3){
+        $retries++
+        try {
+            $job = Invoke-RestMethod @params
+            if ($job.StatusCode -eq 200) {
+                $completed = $true
+            }
+        } catch {
+            Write-Host "[ERROR] Something went wrong when trying to deploy the template." -ForegroundColor White -BackgroundColor Red
+            Write-Host $_.Exception
+            Write-Host $_.Exception.Response
+        }
     }
+        
     Return $job
 }
 
@@ -93,6 +104,9 @@ function getDeployment([string]$accessToken, [string]$subscriptionId, [string]$r
     $response = Invoke-RestMethod @params
     Return $response
 }
+
+# Disable breaking change warning messages
+Set-Item -Path Env:\SuppressAzurePowerShellBreakingChangeWarnings -Value $true
 
 # Variables
 $azContext = Get-AzContext
@@ -156,7 +170,8 @@ $location = selectLocation
 # Create Resource Group
 $resourceGroup = New-AzResourceGroup -Name "pvdemo-rg-${suffix}" -Location $location
 $resourceGroupName = $resourceGroup.ResourceGroupName
-Write-Host "Resource Group: $resourceGroupName"
+Write-Host "`r`n"
+Write-Host "[INFO] Resource Group: $resourceGroupName"
 
 # Create Service Principal
 $sp = createServicePrincipal $subscriptionId $resourceGroupName $suffix
@@ -197,7 +212,7 @@ $job = New-AzResourceGroupDeployment `
   -AsJob
 
 if ($job.State -ne "Running") {
-    Write-Host "[Error] Something went wrong with deployment 2."
+    Write-Host "[ERROR] Something went wrong with deployment 2."
     $job | Format-List -Property *
     exit
 }
