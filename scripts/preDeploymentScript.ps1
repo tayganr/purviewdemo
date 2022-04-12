@@ -15,7 +15,7 @@ function selectLocation() {
     $location = $null
     $purviewLocations = (Get-AzLocation | Where-Object {$_.Providers -contains "Microsoft.Purview"}).Location
     Write-Host "`r`n"
-    Write-Host "Locations:"
+    Write-Host "[INFO] Locations:"
     Foreach ($x in $purviewLocations | Sort-Object) {
         Write-Host " - $x"
     }
@@ -82,8 +82,10 @@ function deployTemplate([string]$accessToken, [string]$templateLink, [string]$re
         Write-Host "[INFO] Attempt #$retries (maxRetries = 3)"
         try {
             $job = Invoke-RestMethod @params
-            $status = $job.StatusCode
-            Write-Host "Status Code: $status"
+            $provisioningState = $job.properties.provisioningState
+            $deploymentName = $job.name
+            Write-Host "[INFO] Deployment Name: $deploymentName"
+            Write-Host "[INFO] Provisioning State: $provisioningState"
             $completed = $true
         } catch {
             Write-Host "[ERROR] Something went wrong when trying to deploy the template." -ForegroundColor White -BackgroundColor Red
@@ -175,6 +177,7 @@ Write-Host "`r`n"
 Write-Host "[INFO] Resource Group: $resourceGroupName`r`n"
 
 # Create Service Principal
+Write-Host "[INFO] Creating a Service Principal.`r`n"
 $sp = createServicePrincipal $subscriptionId $resourceGroupName $suffix
 $clientId = $sp.AppId
 $clientSecret = $sp.PasswordCredentials.SecretText
