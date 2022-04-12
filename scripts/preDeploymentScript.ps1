@@ -191,7 +191,7 @@ $templateLink = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/temp
 $parameters = @{ suffix = @{ value = $suffix } }
 Start-Sleep 1
 Write-Host "`r`n"
-Write-Host "[INFO] Attempting ARM Template deployment 1 of 2.`r`n"
+Write-Host "[INFO] ARM Template deployment 1 of 2."
 $deployment = deployTemplate $accessToken $templateLink $resourceGroupName $parameters
 if ($null -eq $deployment) {
     exit
@@ -208,6 +208,7 @@ Write-Progress -Activity "Deployment 1 of 2." -Completed
 # Deploy Template
 $templateUri = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/templates/json/azuredeploy.json"
 $secureSecret = ConvertTo-SecureString -AsPlainText $sp.PasswordCredentials.SecretText
+Write-Host "[INFO] ARM Template deployment 2 of 2."
 $job = New-AzResourceGroupDeployment `
   -Name "pvDemoTemplate-${suffix}" `
   -ResourceGroupName $resourceGroupName `
