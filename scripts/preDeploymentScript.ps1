@@ -82,6 +82,7 @@ function deployTemplate([string]$accessToken, [string]$templateLink, [string]$re
         Write-Host "[INFO] Attempt #$retries (maxRetries = 3)"
         try {
             $job = Invoke-RestMethod @params
+            Write-Host "Status Code: $job.StatusCode"
             if ($job.StatusCode -eq 200) {
                 $completed = $true
             }
