@@ -44,10 +44,10 @@ function getAccessToken([string]$tenantId, [string]$clientId, [string]$clientSec
     try {
         $token = Invoke-RestMethod -Method Post -Uri $requestAccessTokenUri -Body $body -ContentType 'application/x-www-form-urlencoded'
         $accessToken = $token.access_token
-        Write-Host "Access token generated successfully!"
+        Write-Host "[INFO] Access token generated successfully!"
     } catch {
         Start-Sleep 1
-        Write-Host "Pending access token..."
+        Write-Host "[INFO] Pending access token..."
     }
     Return $accessToken
 }
@@ -82,10 +82,9 @@ function deployTemplate([string]$accessToken, [string]$templateLink, [string]$re
         Write-Host "[INFO] Attempt #$retries (maxRetries = 3)"
         try {
             $job = Invoke-RestMethod @params
-            Write-Host "Status Code: $job.StatusCode"
-            if ($job.StatusCode -eq 200) {
-                $completed = $true
-            }
+            $status = $job.StatusCode
+            Write-Host "Status Code: $status"
+            $completed = $true
         } catch {
             Write-Host "[ERROR] Something went wrong when trying to deploy the template." -ForegroundColor White -BackgroundColor Red
             Write-Host $_.Exception
