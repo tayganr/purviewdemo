@@ -177,7 +177,7 @@ Write-Host "`r`n"
 Write-Host "[INFO] Resource Group: $resourceGroupName`r`n"
 
 # Create Service Principal
-Write-Host "[INFO] Creating a Service Principal.`r`n"
+Write-Host "[INFO] Creating a Service Principal."
 $sp = createServicePrincipal $subscriptionId $resourceGroupName $suffix
 $clientId = $sp.AppId
 $clientSecret = $sp.PasswordCredentials.SecretText
