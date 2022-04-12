@@ -208,7 +208,7 @@ Write-Progress -Activity "Deployment 1 of 2." -Completed
 # Deploy Template
 $templateUri = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/templates/json/azuredeploy.json"
 $secureSecret = ConvertTo-SecureString -AsPlainText $sp.PasswordCredentials.SecretText
-Write-Host "[INFO] ARM Template deployment 2 of 2."
+Write-Host "`r`n[INFO] ARM Template deployment 2 of 2."
 $job = New-AzResourceGroupDeployment `
   -Name "pvDemoTemplate-${suffix}" `
   -ResourceGroupName $resourceGroupName `
