@@ -79,6 +79,7 @@ function deployTemplate([string]$accessToken, [string]$templateLink, [string]$re
     $retries = 0 
     while (-not $completed -and $retries -lt 3){
         $retries++
+        Write-Host "[INFO] Attempt #$retries (maxRetries = 3)"
         try {
             $job = Invoke-RestMethod @params
             if ($job.StatusCode -eq 200) {
@@ -185,6 +186,9 @@ While ($null -eq $accessToken) {
 # Create Azure Purview Account (as Service Principal)
 $templateLink = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/templates/json/purviewdeploy.json" 
 $parameters = @{ suffix = @{ value = $suffix } }
+Start-Sleep 1
+Write-Host "`r`n"
+Write-Host "[INFO] Attempting ARM Template deployment 1 of 2.`r`n"
 $deployment = deployTemplate $accessToken $templateLink $resourceGroupName $parameters
 if ($null -eq $deployment) {
     exit
