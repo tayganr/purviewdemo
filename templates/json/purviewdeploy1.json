@@ -18,7 +18,7 @@
     {
       "type": "Microsoft.Purview/accounts",
       "apiVersion": "2020-12-01-preview",
-      "name": "[format('pvdemo{0}-pv', parameters('suffix'))]",
+      "name": "[format('Contoso-Purview-', parameters('suffix'))]",
       "location": "[resourceGroup().location]",
       "sku": {
         "name": "Standard",
