@@ -1,4 +1,4 @@
-param guid1 string = newGuid()
+// param guid1 string = newGuid()
 var location = resourceGroup().location
 var subscriptionId = subscription().subscriptionId
 var rg = resourceGroup().name

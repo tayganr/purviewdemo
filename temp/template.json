@@ -5,13 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.5.6.12127",
-      "templateHash": "14557551562608750960"
-    }
-  },
-  "parameters": {
-    "guid1": {
-      "type": "string",
-      "defaultValue": "[newGuid()]"
+      "templateHash": "10081360139793055133"
     }
   },
   "variables": {
