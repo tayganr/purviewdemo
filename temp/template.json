@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "9635000978194364936"
+      "templateHash": "17221708024597799545"
     }
   },
   "functions": [],
@@ -33,7 +33,7 @@
       "kind": "AzurePowerShell",
       "properties": {
         "azPowerShellVersion": "7.2",
-        "primaryScriptUri": "https://raw.githubusercontent.com/tayganr/purviewdemo/main/temp/script.ps1",
+        "primaryScriptUri": "https://raw.githubusercontent.com/tayganr/purviewdemo/main/temp/script2.ps1",
         "forceUpdateTag": "[guid(resourceGroup().id)]",
         "retentionInterval": "PT4H"
       },
