@@ -4,10 +4,11 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.5.6.12127",
-      "templateHash": "1992274075291036916"
+      "version": "0.4.613.9944",
+      "templateHash": "9635000978194364936"
     }
   },
+  "functions": [],
   "variables": {
     "location": "[resourceGroup().location]",
     "subscriptionId": "[subscription().subscriptionId]",
@@ -25,25 +26,6 @@
   },
   "resources": [
     {
-      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
-      "apiVersion": "2018-11-30",
-      "name": "configDeployer",
-      "location": "[variables('location')]"
-    },
-    {
-      "type": "Microsoft.Authorization/roleAssignments",
-      "apiVersion": "2020-08-01-preview",
-      "name": "[guid(format('ra04{0}', variables('rg')))]",
-      "properties": {
-        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'configDeployer')).principalId]",
-        "roleDefinitionId": "[variables('role').Contributor]",
-        "principalType": "ServicePrincipal"
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'configDeployer')]"
-      ]
-    },
-    {
       "type": "Microsoft.Resources/deploymentScripts",
       "apiVersion": "2020-10-01",
       "name": "script",
@@ -58,13 +40,9 @@
       "identity": {
         "type": "UserAssigned",
         "userAssignedIdentities": {
-          "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'configDeployer'))]": {}
+          "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'configDeployer')]": {}
         }
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Authorization/roleAssignments', guid(format('ra04{0}', variables('rg'))))]",
-        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'configDeployer')]"
-      ]
+      }
     }
   ]
 }
