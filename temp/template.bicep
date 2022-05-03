@@ -46,7 +46,7 @@ resource script 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   kind: 'AzurePowerShell'
   properties: {
     azPowerShellVersion: '7.2'
-    primaryScriptUri: 'https://raw.githubusercontent.com/tayganr/purviewdemo/main/temp/script2.ps1'
+    primaryScriptUri: 'https://raw.githubusercontent.com/tayganr/purviewdemo/main/temp/script3.ps1'
     forceUpdateTag: guid(resourceGroup().id)
     retentionInterval: 'PT4H'
   }
