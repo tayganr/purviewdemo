@@ -25,21 +25,20 @@ var role = {
 // }
 
 // User Identity
-resource userAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = {
+resource userAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' existing = {
   name: 'configDeployer'
-  location: location
 }
 
 // Assign Contributor RBAC role to User Assigned Identity (configDeployer)
-resource roleAssignment 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
-  name: guid('ra04${rg}')
-  scope: resourceGroup()
-  properties: {
-    principalId: userAssignedIdentity.properties.principalId
-    roleDefinitionId: role['Contributor']
-    principalType: 'ServicePrincipal'
-  }
-}
+// resource roleAssignment 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
+//   name: guid('ra04${rg}')
+//   scope: resourceGroup()
+//   properties: {
+//     principalId: userAssignedIdentity.properties.principalId
+//     roleDefinitionId: role['Contributor']
+//     principalType: 'ServicePrincipal'
+//   }
+// }
 
 resource script 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   name: 'script'
@@ -57,7 +56,7 @@ resource script 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
       '${userAssignedIdentity.id}': {}
     }
   }
-  dependsOn: [
-    roleAssignment
-  ]
+  // dependsOn: [
+  //   roleAssignment
+  // ]
 }
