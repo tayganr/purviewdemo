@@ -75,7 +75,7 @@ $rootCollectionPolicy = getMetadataPolicy $access_token $accountName
 $metadataPolicyId = $rootCollectionPolicy.id
 addRoleAssignment $rootCollectionPolicy $objectId "data-curator"
 addRoleAssignment $rootCollectionPolicy $objectId "data-source-administrator"
-echo $rootCollectionPolicy
+echo $rootCollectionPolicy ConvertTo-Json
 echo $metadataPolicyId
 putMetadataPolicy $access_token $metadataPolicyId $rootCollectionPolicy
 
