@@ -36,44 +36,24 @@ function addRoleAssignment([object]$policy, [string]$principalId, [string]$roleN
 # [PUT] Metadata Policy
 function putMetadataPolicy([string]$access_token, [string]$metadataPolicyId, [object]$payload) {
     $uri = "${pv_endpoint}/policystore/metadataPolicies/${metadataPolicyId}?api-version=2021-07-01"
-    # $params = @{
-    #     ContentType = "application/json"
-    #     Headers = @{"Authorization"="Bearer $access_token"}
-    #     Body = ($payload | ConvertTo-Json -Depth 10)
-    #     Method = "PUT"
-    #     URI = $uri
-    # }
-    
     $body = ($payload | ConvertTo-Json -Depth 10)
     $response = Invoke-WebRequest -Uri $uri -Headers @{Authorization="Bearer $access_token"} -ContentType "application/json" -Method "PUT" -Body $body
-
-
-    # $response = Invoke-RestMethod @params
     Return $response
 }
 
 # Add UAMI to Root Collection Admin
 Add-AzPurviewAccountRootCollectionAdmin -AccountName $accountName -ResourceGroupName $resourceGroupName -ObjectId $objectId
 
-# # Add User Assigned Managed Identity to Root Collection Admin
-# $uri = "https://management.azure.com/subscriptions/${subscriptionId}/resourceGroups/${resourceGroupName}/providers/Microsoft.Purview/accounts/${accountName}/addRootCollectionAdmin?api-version=2021-07-01"
-# $body = @{objectId= "${objectId}"}
-# $response = Invoke-WebRequest -Uri $uri -Method POST -Body $body
-
 # Get Access Token
 $response = Invoke-WebRequest -Uri 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fpurview.azure.net%2F' -Headers @{Metadata="true"}
 $content = $response.Content | ConvertFrom-Json
 $access_token = $content.access_token
-echo $access_token
 
 # Update Root Collection Policy (Add Current User to Built-In Purview Roles)
 $rootCollectionPolicy = getMetadataPolicy $access_token $accountName
-$metadataPolicyId = $rootCollectionPolicy.id
 addRoleAssignment $rootCollectionPolicy $objectId "data-curator"
 addRoleAssignment $rootCollectionPolicy $objectId "data-source-administrator"
-echo $rootCollectionPolicy ConvertTo-Json
-echo $metadataPolicyId
-putMetadataPolicy $access_token $metadataPolicyId $rootCollectionPolicy
+putMetadataPolicy $access_token $rootCollectionPolicy.id $rootCollectionPolicy
 
 # Refresh Access Token
 $response = Invoke-WebRequest -Uri 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fpurview.azure.net%2F' -Headers @{Metadata="true"}
@@ -83,5 +63,7 @@ $access_token = $content.access_token
 # Get Glossary
 $response = Invoke-WebRequest -Uri "https://${accountName}.purview.azure.com/catalog/api/atlas/v2/glossary" -Headers @{Authorization="Bearer $access_token"}
 $content = $response.Content | ConvertFrom-Json
-echo $content
 
+# Key Vault Connection
+$kvConn = New-AzPurviewAzureKeyVaultObject -BaseUrl 'https://datascankv.vault.azure.net/' -Description 'This is a key vault'
+New-AzPurviewKeyVaultConnection -Endpoint $pv_endpoint -KeyVaultName "KeyVaultConnection2" -Body $kvConn
