@@ -51,6 +51,7 @@ function putMetadataPolicy([string]$access_token, [string]$metadataPolicyId, [ob
         Method = "PUT"
         URI = $uri
     }
+    echo $params
     $response = Invoke-RestMethod @params
     Return $response
 }
@@ -74,6 +75,8 @@ $rootCollectionPolicy = getMetadataPolicy $access_token $accountName
 $metadataPolicyId = $rootCollectionPolicy.id
 addRoleAssignment $rootCollectionPolicy $objectId "data-curator"
 addRoleAssignment $rootCollectionPolicy $objectId "data-source-administrator"
+echo $rootCollectionPolicy
+echo $metadataPolicyId
 putMetadataPolicy $access_token $metadataPolicyId $rootCollectionPolicy
 
 # Refresh Access Token
