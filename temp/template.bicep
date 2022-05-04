@@ -19,6 +19,8 @@ var vaultUri = 'https://pvdemo6uqbt-keyvault.vault.azure.net/'
 var sqlServerName = 'pvdemo6uqbt-sqlsvr'
 var sqlDatabaseName = 'pvdemo6uqbt-sqldb'
 var storageAccountName = 'pvdemo6uqbtadls'
+var adfName = 'pvdemo6uqbt-adf'
+var adfPipelineName = 'copyPipeline'
 
 // resource pv 'Microsoft.Purview/accounts@2021-07-01' = {
 //   name: 'pvdemo${guid1}-pv'
@@ -57,8 +59,8 @@ resource script 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   kind: 'AzurePowerShell'
   properties: {
     azPowerShellVersion: '7.2'
-    arguments: '-subscriptionId ${subscriptionId} -resourceGroupName ${resourceGroupName} -accountName ${purviewAccount.name} -objectId ${userAssignedIdentity.properties.principalId} -sqlAdminLogin ${sqlAdminLogin} -sqlSecretName ${sqlSecretName} -vaultUri ${vaultUri} -sqlServerName ${sqlServerName} -location ${location} -sqlDatabaseName ${sqlDatabaseName} -storageAccountName ${storageAccountName}'
-    primaryScriptUri: 'https://raw.githubusercontent.com/tayganr/purviewdemo/main/temp/script22.ps1'
+    arguments: '-subscriptionId ${subscriptionId} -resourceGroupName ${resourceGroupName} -accountName ${purviewAccount.name} -objectId ${userAssignedIdentity.properties.principalId} -sqlAdminLogin ${sqlAdminLogin} -sqlSecretName ${sqlSecretName} -vaultUri ${vaultUri} -sqlServerName ${sqlServerName} -location ${location} -sqlDatabaseName ${sqlDatabaseName} -storageAccountName ${storageAccountName} -adfName ${adfName} -adfPipelineName ${adfPipelineName}'
+    primaryScriptUri: 'https://raw.githubusercontent.com/tayganr/purviewdemo/main/temp/script23.ps1'
     forceUpdateTag: guid(resourceGroup().id)
     retentionInterval: 'PT4H'
   }

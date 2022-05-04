@@ -10,6 +10,8 @@ param(
     [string]$location,
     [string]$sqlDatabaseName,
     [string]$storageAccountName,
+    [string]$adfName,
+    [string]$adfPipelineName
 )
 
 Install-Module Az.Purview -Force
@@ -92,15 +94,9 @@ function createGlossary([string]$access_token) {
         name = "Glossary"
         qualifiedName = "Glossary"
     }
-    $params = @{
-        ContentType = "application/json"
-        Headers = @{"Authorization"="Bearer $access_token"}
-        Method = "POST"
-        URI = $uri
-        Body = ($payload | ConvertTo-Json -Depth 4)
-    }
-    $response = Invoke-RestMethod @params
-    Return $response
+    $body = ($payload | ConvertTo-Json -Depth 4)
+    $response = Invoke-WebRequest -Uri $uri -Headers @{Authorization="Bearer $access_token"} -ContentType "application/json" -Method "POST" -Body $body
+    Return $response.Content | ConvertFrom-Json -Depth 10
 }
 
 # [POST] Import Glossary Terms
@@ -319,3 +315,10 @@ $scacn2 = putScan $access_token $sourceAdlsPayload.name $scanAdlsPayload
 # 12. Trigger Scan
 $run2 = runScan $access_token $sourceAdlsPayload.name $scanAdlsPayload.name
 
+# 13. Run ADF Pipeline
+Invoke-AzDataFactoryV2Pipeline -ResourceGroupName $resourceGroupName -DataFactoryName $adfName -PipelineName $adfPipelineName
+
+# 14. Populate Glossary
+$glossaryGuid = (createGlossary $access_token).guid
+$glossaryTermsTemplateUri = 'https://raw.githubusercontent.com/tayganr/purviewlab/main/assets/import-terms-sample.csv'
+importGlossaryTerms $access_token $glossaryGuid $glossaryTermsTemplateUri
