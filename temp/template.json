@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.5.6.12127",
-      "templateHash": "15764796724178922015"
+      "templateHash": "6704166035476442026"
     }
   },
   "parameters": {
@@ -81,7 +81,18 @@
       "name": "[format('{0}/{1}/{2}', format('pvdemo{0}adls', variables('suffix')), 'default', 'bing')]",
       "properties": {
         "publicAccess": "Blob"
-      }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts/blobServices', format('pvdemo{0}adls', variables('suffix')), 'default')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices",
+      "apiVersion": "2021-04-01",
+      "name": "[format('{0}/{1}', format('pvdemo{0}adls', variables('suffix')), 'default')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', format('pvdemo{0}adls', variables('suffix')))]"
+      ]
     },
     {
       "type": "Microsoft.DataFactory/factories/linkedservices",

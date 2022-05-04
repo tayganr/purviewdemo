@@ -152,7 +152,7 @@ resource adls 'Microsoft.Storage/storageAccounts@2021-04-01' = {
   properties: {
     isHnsEnabled: true
   }
-  resource blobService 'blobServices' existing = {
+  resource blobService 'blobServices' = {
     name: 'default'
     resource blobContainer 'containers' = {
       name: 'bing'
