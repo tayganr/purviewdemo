@@ -81,7 +81,7 @@ function runScan([string]$access_token, [string]$datasourceName, [string]$scanNa
     $uri = "${pv_endpoint}/scan/datasources/${datasourceName}/scans/${scanName}/run?api-version=2018-12-01-preview"
     $payload = @{ scanLevel = "Full" }
     $body = ($payload | ConvertTo-Json)
-    $response = Invoke-WebRequest -Uri $uri -Headers @{Authorization="Bearer $access_token"} -ContentType "application/json" -Method "PUT" -Body $body
+    $response = Invoke-WebRequest -Uri $uri -Headers @{Authorization="Bearer $access_token"} -ContentType "application/json" -Method "POST" -Body $body
     Return $response.Content | ConvertFrom-Json -Depth 10
 }
 
@@ -184,16 +184,16 @@ $access_token = $content.access_token
 $rootCollectionPolicy = getMetadataPolicy $access_token $accountName
 addRoleAssignment $rootCollectionPolicy $objectId "data-curator"
 addRoleAssignment $rootCollectionPolicy $objectId "data-source-administrator"
-putMetadataPolicy $access_token $rootCollectionPolicy.id $rootCollectionPolicy
+$updatedPolicy = putMetadataPolicy $access_token $rootCollectionPolicy.id $rootCollectionPolicy
 
 # Refresh Access Token
 $response = Invoke-WebRequest -Uri 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fpurview.azure.net%2F' -Headers @{Metadata="true"}
 $content = $response.Content | ConvertFrom-Json
 $access_token = $content.access_token
 
-# Get Glossary
-$response = Invoke-WebRequest -Uri "https://${accountName}.purview.azure.com/catalog/api/atlas/v2/glossary" -Headers @{Authorization="Bearer $access_token"}
-$content = $response.Content | ConvertFrom-Json
+# # Get Glossary
+# $response = Invoke-WebRequest -Uri "https://${accountName}.purview.azure.com/catalog/api/atlas/v2/glossary" -Headers @{Authorization="Bearer $access_token"}
+# $content = $response.Content | ConvertFrom-Json
 
 # 2. Create a Key Vault Connection
 $vaultPayload = @{
@@ -251,7 +251,7 @@ $sourceSqlPayload = @{
         subscriptionId = $subscriptionId
     }
 }
-$sqlSource = putSource $access_token $sourceSqlPayload
+$source1 = putSource $access_token $sourceSqlPayload
 
 # 7. Create a Scan Configuration
 $randomId = -join (((48..57)+(65..90)+(97..122)) * 80 |Get-Random -Count 3 |ForEach-Object{[char]$_})
@@ -274,10 +274,10 @@ $scanSqlPayload = @{
         }
     }
 }
-putScan $token $sourceSqlPayload.name $scanSqlPayload
+$scan1 = putScan $access_token $sourceSqlPayload.name $scanSqlPayload
 
 # 8. Trigger Scan
-runScan $token $sourceSqlPayload.name $scanSqlPayload.name
+$run1 = runScan $access_token $sourceSqlPayload.name $scanSqlPayload.name
 
 
 # 10. Create a Source (ADLS Gen2)
@@ -294,10 +294,10 @@ $sourceAdlsPayload = @{
         endpoint = "https://${storageAccountName}.dfs.core.windows.net/"
         resourceGroup = $resourceGroupName
         resourceName = $storageAccountName
-        subscriptionId = $subscription_id
+        subscriptionId = $subscriptionId
     }
 }
-putSource $token $sourceAdlsPayload
+$source2 = putSource $access_token $sourceAdlsPayload
 
 # 11. Create a Scan Configuration
 $randomId = -join (((48..57)+(65..90)+(97..122)) * 80 |Get-Random -Count 3 |ForEach-Object{[char]$_})
@@ -314,7 +314,8 @@ $scanAdlsPayload = @{
         }
     }
 }
-putScan $token $sourceAdlsPayload.name $scanAdlsPayload
+$scacn2 = putScan $access_token $sourceAdlsPayload.name $scanAdlsPayload
 
 # 12. Trigger Scan
-runScan $token $sourceAdlsPayload.name $scanAdlsPayload.name
+$run2 = runScan $access_token $sourceAdlsPayload.name $scanAdlsPayload.name
+

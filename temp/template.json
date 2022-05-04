@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.5.6.12127",
-      "templateHash": "1809855050027514"
+      "templateHash": "895031980006863373"
     }
   },
   "variables": {
@@ -23,12 +23,12 @@
       "Owner": "[format('{0}/8e3af657-a8ff-443c-a75c-2fe8c4bcb635', variables('rdPrefix'))]",
       "UserAccessAdministrator": "[format('{0}/18d7d88d-d35e-4fb5-a5c3-7773c20a72d9', variables('rdPrefix'))]"
     },
-    "sqlAdminLogin": "asa",
-    "sqlSecretName": "abc",
+    "sqlAdminLogin": "sqladmin",
+    "sqlSecretName": "sql-secret",
     "vaultUri": "https://pvdemo6uqbt-keyvault.vault.azure.net/",
-    "sqlServerName": "mysqlserver",
-    "sqlDatabaseName": "mydatabase",
-    "storageAccountName": "mystorageaccount"
+    "sqlServerName": "pvdemo6uqbt-sqlsvr",
+    "sqlDatabaseName": "pvdemo6uqbt-sqldb",
+    "storageAccountName": "pvdemo6uqbtadls"
   },
   "resources": [
     {
@@ -40,7 +40,7 @@
       "properties": {
         "azPowerShellVersion": "7.2",
         "arguments": "[format('-subscriptionId {0} -resourceGroupName {1} -accountName {2} -objectId {3} -sqlAdminLogin {4} -sqlSecretName {5} -vaultUri {6} -sqlServerName {7} -location {8} -sqlDatabaseName {9} -storageAccountName {10}', variables('subscriptionId'), variables('resourceGroupName'), 'pvdemo6uqbt-pv', reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'configDeployer'), '2018-11-30').principalId, variables('sqlAdminLogin'), variables('sqlSecretName'), variables('vaultUri'), variables('sqlServerName'), variables('location'), variables('sqlDatabaseName'), variables('storageAccountName'))]",
-        "primaryScriptUri": "https://raw.githubusercontent.com/tayganr/purviewdemo/main/temp/script21.ps1",
+        "primaryScriptUri": "https://raw.githubusercontent.com/tayganr/purviewdemo/main/temp/script22.ps1",
         "forceUpdateTag": "[guid(resourceGroup().id)]",
         "retentionInterval": "PT4H"
       },
