@@ -2,7 +2,9 @@ param(
     [string]$subscriptionId,
     [string]$resourceGroupName,
     [string]$accountName,
-    [string]$objectId
+    [string]$objectId,
+    [string]$sqlAdminLogin,
+    [string]$sqlSecretName
 )
 
 Install-Module Az.Purview -Force
@@ -46,14 +48,8 @@ function putVault([string]$access_token, [hashtable]$payload) {
     $randomId = -join (((48..57)+(65..90)+(97..122)) * 80 |Get-Random -Count 3 |ForEach-Object{[char]$_})
     $keyVaultName = "keyVault-${randomId}"
     $uri = "${pv_endpoint}/scan/azureKeyVaults/${keyVaultName}"
-    $params = @{
-        ContentType = "application/json"
-        Headers = @{"Authorization"="Bearer $access_token"}
-        Body = ($payload | ConvertTo-Json)
-        Method = "PUT"
-        URI = $uri
-    }
-    $response = Invoke-RestMethod @params
+    $body = ($payload | ConvertTo-Json)
+    $response = Invoke-WebRequest -Uri $uri -Headers @{Authorization="Bearer $access_token"} -ContentType "application/json" -Method "PUT" -Body $body
     Return $response
 }
 
@@ -61,14 +57,9 @@ function putVault([string]$access_token, [hashtable]$payload) {
 function putCredential([string]$access_token, [hashtable]$payload) {
     $credentialName = $payload.name
     $uri = "${pv_endpoint}/proxy/credentials/${credentialName}?api-version=2020-12-01-preview"
-    $params = @{
-        ContentType = "application/json"
-        Headers = @{"Authorization"="Bearer $access_token"}
-        Body = ($payload | ConvertTo-Json -Depth 9)
-        Method = "PUT"
-        URI = $uri
-    }
+    $body = ($payload | ConvertTo-Json -Depth 9)
     $response = Invoke-RestMethod @params
+    $response = Invoke-WebRequest -Uri $uri -Headers @{Authorization="Bearer $access_token"} -ContentType "application/json" -Method "PUT" -Body $body
     Return $response
 }
 
@@ -179,7 +170,7 @@ $credential_payload = @{
         type = "SqlAuth"
         typeProperties = @{
             password = @{
-                secretName = $sql_secret_name
+                secretName = $sqlSecretName
                 secretVersion = ""
                 store = @{
                     referenceName = $vault.name
@@ -187,16 +178,16 @@ $credential_payload = @{
                 }
                 type = "AzureKeyVaultSecret"
             }
-            user = $admin_login
+            user = $sqlAdminLogin
         }
     }
     type = "Microsoft.Purview/accounts/credentials"
 }
 putCredential $access_token $credential_payload
 
-# 5. Create Collections (Sales and Marketing)
-$collectionSales = putCollection $access_token "Sales" $purview_account
-$collectionMarketing = putCollection $access_token "Marketing" $purview_account
-$collectionSalesName = $collectionSales.name
-$collectionMarketingName = $collectionMarketing.name
-Start-Sleep 30
+# # 5. Create Collections (Sales and Marketing)
+# $collectionSales = putCollection $access_token "Sales" $purview_account
+# $collectionMarketing = putCollection $access_token "Marketing" $purview_account
+# $collectionSalesName = $collectionSales.name
+# $collectionMarketingName = $collectionMarketing.name
+# Start-Sleep 30

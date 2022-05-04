@@ -10,8 +10,11 @@ var role = {
   StorageBlobDataReader: '${rdPrefix}/2a2b9908-6ea1-4ae2-8e65-a410df84e7d1'
   StorageBlobDataContributor: '${rdPrefix}/ba92f5b4-2d11-453d-a403-e96b0029c9fe'
   Contributor: '${rdPrefix}/b24988ac-6180-42a0-ab88-20f7382dd24c'
+  Owner: '${rdPrefix}/8e3af657-a8ff-443c-a75c-2fe8c4bcb635'
   UserAccessAdministrator: '${rdPrefix}/18d7d88d-d35e-4fb5-a5c3-7773c20a72d9'
 }
+var sqlAdminLogin = 'asa'
+var sqlSecretName = 'abc'
 
 // resource pv 'Microsoft.Purview/accounts@2021-07-01' = {
 //   name: 'pvdemo${guid1}-pv'
@@ -50,8 +53,8 @@ resource script 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   kind: 'AzurePowerShell'
   properties: {
     azPowerShellVersion: '7.2'
-    arguments: '-subscriptionId ${subscriptionId} -resourceGroupName ${resourceGroupName} -accountName ${purviewAccount.name} -objectId ${userAssignedIdentity.properties.principalId}'
-    primaryScriptUri: 'https://raw.githubusercontent.com/tayganr/purviewdemo/main/temp/script13.ps1'
+    arguments: '-subscriptionId ${subscriptionId} -resourceGroupName ${resourceGroupName} -accountName ${purviewAccount.name} -objectId ${userAssignedIdentity.properties.principalId} -sqlAdminLogin ${sqlAdminLogin} -sqlSecretName ${sqlSecretName}'
+    primaryScriptUri: 'https://raw.githubusercontent.com/tayganr/purviewdemo/main/temp/script14.ps1'
     forceUpdateTag: guid(resourceGroup().id)
     retentionInterval: 'PT4H'
   }
