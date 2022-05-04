@@ -5,7 +5,10 @@ param(
     [string]$objectId,
     [string]$sqlAdminLogin,
     [string]$sqlSecretName,
-    [string]$vaultUri
+    [string]$vaultUri,
+    [string]$sqlServerName,
+    [string]$location,
+    [string]$sqlDatabaseName
 )
 
 Install-Module Az.Purview -Force
@@ -67,30 +70,18 @@ function putCredential([string]$access_token, [hashtable]$payload) {
 function putScan([string]$access_token, [string]$dataSourceName, [hashtable]$payload) {
     $scanName = $payload.name
     $uri = "${pv_endpoint}/scan/datasources/${dataSourceName}/scans/${scanName}"
-    $params = @{
-        ContentType = "application/json"
-        Headers = @{"Authorization"="Bearer $access_token"}
-        Body = ($payload | ConvertTo-Json -Depth 9)
-        Method = "PUT"
-        URI = $uri
-    }
-    $response = Invoke-RestMethod @params
-    Return $response
+    $body = ($payload | ConvertTo-Json -Depth 9)
+    $response = Invoke-WebRequest -Uri $uri -Headers @{Authorization="Bearer $access_token"} -ContentType "application/json" -Method "PUT" -Body $body
+    Return $response.Content | ConvertFrom-Json -Depth 10
 }
 
 # [PUT] Run Scan
 function runScan([string]$access_token, [string]$datasourceName, [string]$scanName) {
     $uri = "${pv_endpoint}/scan/datasources/${datasourceName}/scans/${scanName}/run?api-version=2018-12-01-preview"
     $payload = @{ scanLevel = "Full" }
-    $params = @{
-        ContentType = "application/json"
-        Headers = @{"Authorization"="Bearer $access_token"}
-        Body = ($payload | ConvertTo-Json)
-        Method = "POST"
-        URI = $uri
-    }
-    $response = Invoke-RestMethod @params
-    Return $response
+    $body = ($payload | ConvertTo-Json)
+    $response = Invoke-WebRequest -Uri $uri -Headers @{Authorization="Bearer $access_token"} -ContentType "application/json" -Method "PUT" -Body $body
+    Return $response.Content | ConvertFrom-Json -Depth 10
 }
 
 # [POST] Create Glossary
@@ -204,16 +195,16 @@ $response = Invoke-WebRequest -Uri "https://${accountName}.purview.azure.com/cat
 $content = $response.Content | ConvertFrom-Json
 
 # 2. Create a Key Vault Connection
-$vault_payload = @{
+$vaultPayload = @{
     properties = @{
         baseUrl = $vaultUri
         description = ""
     }
 }
-$vault = putVault $access_token $vault_payload
+$vault = putVault $access_token $vaultPayload
 
 # 3. Create a Credential
-$credential_payload = @{
+$credentialPayload = @{
     name = "sql-cred"
     properties = @{
         description = ""
@@ -233,7 +224,7 @@ $credential_payload = @{
     }
     type = "Microsoft.Purview/accounts/credentials"
 }
-$cred = putCredential $access_token $credential_payload
+$cred = putCredential $access_token $credentialPayload
 
 # 5. Create Collections (Sales and Marketing)
 $collectionSales = putCollection $access_token "Sales2" $accountName
@@ -243,9 +234,7 @@ $collectionMarketingName = $collectionMarketing.name
 Start-Sleep 30
 
 # 6. Create a Source (Azure SQL Database)
-$location = "uksouth"
-$sql_server_name = "mysqlserver"
-$source_sqldb_payload = @{
+$sourceSqlPayload = @{
     id = "datasources/AzureSqlDatabase"
     kind = "AzureSqlDatabase"
     name = "AzureSqlDatabase"
@@ -256,9 +245,35 @@ $source_sqldb_payload = @{
         }
         location = $location
         resourceGroup = $resourceGroupName
-        resourceName = $sql_server_name
-        serverEndpoint = "${sql_server_name}.database.windows.net"
+        resourceName = $sqlServerName
+        serverEndpoint = "${sqlServerName}.database.windows.net"
         subscriptionId = $subscriptionId
     }
 }
-$sql_source = putSource $access_token $source_sqldb_payload
+$sqlSource = putSource $access_token $sourceSqlPayload
+
+# 7. Create a Scan Configuration
+$randomId = -join (((48..57)+(65..90)+(97..122)) * 80 |Get-Random -Count 3 |ForEach-Object{[char]$_})
+$scanName = "Scan-${randomId}"
+$scanSqlPayload = @{
+    kind = "AzureSqlDatabaseCredential"
+    name = $scanName
+    properties = @{
+        databaseName = $sqlDatabaseName
+        scanRulesetName = "AzureSqlDatabase"
+        scanRulesetType = "System"
+        serverEndpoint = "${sqlServerName}.database.windows.net"
+        credential = @{
+            credentialType = "SqlAuth"
+            referenceName = $credentialPayload.name
+        }
+        collection = @{
+            type = "CollectionReference"
+            referenceName = $collectionSalesName
+        }
+    }
+}
+putScan $token $sourceSqlPayload.name $scanSqlPayload
+
+# 8. Trigger Scan
+runScan $token $sourceSqlPayload.name $scanSqlPayload.name
