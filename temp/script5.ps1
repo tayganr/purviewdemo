@@ -5,6 +5,9 @@ param(
     [string]$objectId
 )
 
+Install-Module Az.Purview -Force
+Import-Module Az.Purview
+
 Add-AzPurviewAccountRootCollectionAdmin -AccountName $accountName -ResourceGroupName $resourceGroupName -ObjectId $objectId
 
 # # Add User Assigned Managed Identity to Root Collection Admin
