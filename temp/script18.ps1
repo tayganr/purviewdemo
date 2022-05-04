@@ -130,6 +130,23 @@ function importGlossaryTerms([string]$access_token, [string]$glossaryGuid, [stri
     return $result
 }
 
+# [PUT] Collection
+function putCollection([string]$access_token, [string]$collectionFriendlyName, [string]$parentCollection) {
+    $collectionName = -join ((97..122) | Get-Random -Count 6 | ForEach-Object {[char]$_})
+    $uri = "${pv_endpoint}/account/collections/${collectionName}?api-version=2019-11-01-preview"
+    $payload = @{
+        "name" = $collectionName
+        "parentCollection"= @{
+            "type" = "CollectionReference"
+            "referenceName" = $parentCollection
+        }
+        "friendlyName" = $collectionFriendlyName
+    }
+    $body = ($payload | ConvertTo-Json -Depth 10)
+    $response = Invoke-WebRequest -Uri $uri -Headers @{Authorization="Bearer $access_token"} -ContentType "application/json" -Method "PUT" -Body $body
+    Return $response.Content | ConvertFrom-Json -Depth 10
+}
+
 # Add UAMI to Root Collection Admin
 Add-AzPurviewAccountRootCollectionAdmin -AccountName $accountName -ResourceGroupName $resourceGroupName -ObjectId $objectId
 
@@ -183,11 +200,11 @@ $credential_payload = @{
     }
     type = "Microsoft.Purview/accounts/credentials"
 }
-putCredential $access_token $credential_payload
+$cred = putCredential $access_token $credential_payload
 
-# # 5. Create Collections (Sales and Marketing)
-# $collectionSales = putCollection $access_token "Sales" $purview_account
-# $collectionMarketing = putCollection $access_token "Marketing" $purview_account
-# $collectionSalesName = $collectionSales.name
-# $collectionMarketingName = $collectionMarketing.name
-# Start-Sleep 30
+# 5. Create Collections (Sales and Marketing)
+$collectionSales = putCollection $access_token "Sales2" $accountName
+$collectionMarketing = putCollection $access_token "Marketing2" $accountName
+$collectionSalesName = $collectionSales.name
+$collectionMarketingName = $collectionMarketing.name
+Start-Sleep 30

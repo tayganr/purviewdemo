@@ -55,7 +55,7 @@ resource script 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   properties: {
     azPowerShellVersion: '7.2'
     arguments: '-subscriptionId ${subscriptionId} -resourceGroupName ${resourceGroupName} -accountName ${purviewAccount.name} -objectId ${userAssignedIdentity.properties.principalId} -sqlAdminLogin ${sqlAdminLogin} -sqlSecretName ${sqlSecretName} -vaultUri ${vaultUri}'
-    primaryScriptUri: 'https://raw.githubusercontent.com/tayganr/purviewdemo/main/temp/script17.ps1'
+    primaryScriptUri: 'https://raw.githubusercontent.com/tayganr/purviewdemo/main/temp/script18.ps1'
     forceUpdateTag: guid(resourceGroup().id)
     retentionInterval: 'PT4H'
   }
