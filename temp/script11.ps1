@@ -14,16 +14,8 @@ $pv_endpoint = "https://${accountName}.purview.azure.com"
 # [GET] Metadata Policy
 function getMetadataPolicy([string]$access_token, [string]$collectionName) {
     $uri = "${pv_endpoint}/policystore/collections/${collectionName}/metadataPolicy?api-version=2021-07-01"
-    echo $uri
-    $params = @{
-        ContentType = "application/json"
-        Headers = @{"Authorization"="Bearer $access_token"}
-        Method = "GET"
-        URI = $uri
-    }
-    echo $params
-    $response = Invoke-RestMethod @params
-    Return $response
+    $response = Invoke-WebRequest -Uri $uri -Headers @{Authorization="Bearer $access_token"} -ContentType "application/json" -Method "GET"
+    Return $response.Content | ConvertFrom-Json -Depth 10
 }
 
 # Modify Metadata Policy
@@ -44,15 +36,19 @@ function addRoleAssignment([object]$policy, [string]$principalId, [string]$roleN
 # [PUT] Metadata Policy
 function putMetadataPolicy([string]$access_token, [string]$metadataPolicyId, [object]$payload) {
     $uri = "${pv_endpoint}/policystore/metadataPolicies/${metadataPolicyId}?api-version=2021-07-01"
-    $params = @{
-        ContentType = "application/json"
-        Headers = @{"Authorization"="Bearer $access_token"}
-        Body = ($payload | ConvertTo-Json -Depth 10)
-        Method = "PUT"
-        URI = $uri
-    }
-    echo $params
-    $response = Invoke-RestMethod @params
+    # $params = @{
+    #     ContentType = "application/json"
+    #     Headers = @{"Authorization"="Bearer $access_token"}
+    #     Body = ($payload | ConvertTo-Json -Depth 10)
+    #     Method = "PUT"
+    #     URI = $uri
+    # }
+    
+    $body = ($payload | ConvertTo-Json -Depth 10)
+    $response = Invoke-WebRequest -Uri $uri -Headers @{Authorization="Bearer $access_token"} -ContentType "application/json" -Method "PUT" -Body $body
+
+
+    # $response = Invoke-RestMethod @params
     Return $response
 }
 
