@@ -59,7 +59,6 @@ function putCredential([string]$access_token, [hashtable]$payload) {
     $credentialName = $payload.name
     $uri = "${pv_endpoint}/proxy/credentials/${credentialName}?api-version=2020-12-01-preview"
     $body = ($payload | ConvertTo-Json -Depth 9)
-    $response = Invoke-RestMethod @params
     $response = Invoke-WebRequest -Uri $uri -Headers @{Authorization="Bearer $access_token"} -ContentType "application/json" -Method "PUT" -Body $body
     Return $response.Content | ConvertFrom-Json -Depth 10
 }

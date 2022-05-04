@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.5.6.12127",
-      "templateHash": "1803131137918750143"
+      "templateHash": "9929747114124843314"
     }
   },
   "variables": {
@@ -37,7 +37,7 @@
       "properties": {
         "azPowerShellVersion": "7.2",
         "arguments": "[format('-subscriptionId {0} -resourceGroupName {1} -accountName {2} -objectId {3} -sqlAdminLogin {4} -sqlSecretName {5} -vaultUri {6}', variables('subscriptionId'), variables('resourceGroupName'), 'pvdemo6uqbt-pv', reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'configDeployer'), '2018-11-30').principalId, variables('sqlAdminLogin'), variables('sqlSecretName'), variables('vaultUri'))]",
-        "primaryScriptUri": "https://raw.githubusercontent.com/tayganr/purviewdemo/main/temp/script16.ps1",
+        "primaryScriptUri": "https://raw.githubusercontent.com/tayganr/purviewdemo/main/temp/script17.ps1",
         "forceUpdateTag": "[guid(resourceGroup().id)]",
         "retentionInterval": "PT4H"
       },
