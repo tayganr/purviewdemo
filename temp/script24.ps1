@@ -3,13 +3,14 @@ param(
     [string]$resourceGroupName,
     [string]$accountName,
     [string]$objectId,
-    [string]$sqlAdminLogin,
+    [string]$sqlServerAdminLogin,
     [string]$sqlSecretName,
     [string]$vaultUri,
     [string]$sqlServerName,
     [string]$location,
     [string]$sqlDatabaseName,
     [string]$storageAccountName,
+    [string]$adfPrincipalId,
     [string]$adfName,
     [string]$adfPipelineName
 )
@@ -180,6 +181,7 @@ $access_token = $content.access_token
 $rootCollectionPolicy = getMetadataPolicy $access_token $accountName
 addRoleAssignment $rootCollectionPolicy $objectId "data-curator"
 addRoleAssignment $rootCollectionPolicy $objectId "data-source-administrator"
+addRoleAssignment $rootCollectionPolicy $adfPrincipalId "data-curator"
 $updatedPolicy = putMetadataPolicy $access_token $rootCollectionPolicy.id $rootCollectionPolicy
 
 # Refresh Access Token
@@ -216,7 +218,7 @@ $credentialPayload = @{
                 }
                 type = "AzureKeyVaultSecret"
             }
-            user = $sqlAdminLogin
+            user = $sqlServerAdminLogin
         }
     }
     type = "Microsoft.Purview/accounts/credentials"
