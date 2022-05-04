@@ -4,7 +4,8 @@ param(
     [string]$accountName,
     [string]$objectId,
     [string]$sqlAdminLogin,
-    [string]$sqlSecretName
+    [string]$sqlSecretName,
+    [string]$vaultUri
 )
 
 Install-Module Az.Purview -Force
@@ -40,7 +41,7 @@ function putMetadataPolicy([string]$access_token, [string]$metadataPolicyId, [ob
     $uri = "${pv_endpoint}/policystore/metadataPolicies/${metadataPolicyId}?api-version=2021-07-01"
     $body = ($payload | ConvertTo-Json -Depth 10)
     $response = Invoke-WebRequest -Uri $uri -Headers @{Authorization="Bearer $access_token"} -ContentType "application/json" -Method "PUT" -Body $body
-    Return $response
+    Return $response.Content | ConvertFrom-Json -Depth 10
 }
 
 # [PUT] Key Vault
@@ -49,12 +50,8 @@ function putVault([string]$access_token, [hashtable]$payload) {
     $keyVaultName = "keyVault-${randomId}"
     $uri = "${pv_endpoint}/scan/azureKeyVaults/${keyVaultName}"
     $body = ($payload | ConvertTo-Json)
-    echo $uri
-    echo $access_token
-    echo $keyVaultName
-    echo $body
     $response = Invoke-WebRequest -Uri $uri -Headers @{Authorization="Bearer $access_token"} -ContentType "application/json" -Method "PUT" -Body $body
-    Return $response
+    Return $response.Content | ConvertFrom-Json -Depth 10
 }
 
 # [PUT] Credential
@@ -64,7 +61,7 @@ function putCredential([string]$access_token, [hashtable]$payload) {
     $body = ($payload | ConvertTo-Json -Depth 9)
     $response = Invoke-RestMethod @params
     $response = Invoke-WebRequest -Uri $uri -Headers @{Authorization="Bearer $access_token"} -ContentType "application/json" -Method "PUT" -Body $body
-    Return $response
+    Return $response.Content | ConvertFrom-Json -Depth 10
 }
 
 # [PUT] Scan
@@ -160,7 +157,7 @@ $content = $response.Content | ConvertFrom-Json
 # 2. Create a Key Vault Connection
 $vault_payload = @{
     properties = @{
-        baseUrl = $vault_uri
+        baseUrl = $vaultUri
         description = ""
     }
 }
