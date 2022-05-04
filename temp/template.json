@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.5.6.12127",
-      "templateHash": "8088758582596933579"
+      "templateHash": "15172975583471817591"
     }
   },
   "parameters": {
@@ -41,7 +41,7 @@
       "UserAccessAdministrator": "[format('{0}/18d7d88d-d35e-4fb5-a5c3-7773c20a72d9', variables('rdPrefix'))]"
     },
     "sqlSecretName": "sql-secret",
-    "suffix": "[uniqueString(resourceGroup().id, deployment().name)]"
+    "suffix": "[substring(uniqueString(resourceGroup().id, deployment().name), 0, 5)]"
   },
   "resources": [
     {

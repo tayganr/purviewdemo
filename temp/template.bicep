@@ -30,7 +30,7 @@ var sqlSecretName = 'sql-secret'
 // var adfName = 'pvdemo6uqbt-adf'
 // var adfPipelineName = 'copyPipeline'
 // var adfPrincipalId = '3242'
-var suffix = uniqueString(resourceGroup().id, deployment().name)
+var suffix = substring(uniqueString(resourceGroup().id, deployment().name),0,5)
 
 // Microsoft Purview Account
 resource purviewAccount 'Microsoft.Purview/accounts@2021-07-01' = {
