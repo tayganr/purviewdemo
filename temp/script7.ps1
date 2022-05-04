@@ -8,6 +8,9 @@ param(
 Install-Module Az.Purview -Force
 Import-Module Az.Purview
 
+# Variables
+$pv_endpoint = "https://${accountName}.purview.azure.com"
+
 # [GET] Metadata Policy
 function getMetadataPolicy([string]$token, [string]$collectionName) {
     $uri = "${pv_endpoint}/policystore/collections/${collectionName}/metadataPolicy?api-version=2021-07-01"
