@@ -8,7 +8,8 @@ param(
     [string]$vaultUri,
     [string]$sqlServerName,
     [string]$location,
-    [string]$sqlDatabaseName
+    [string]$sqlDatabaseName,
+    [string]$storageAccountName,
 )
 
 Install-Module Az.Purview -Force
@@ -277,3 +278,43 @@ putScan $token $sourceSqlPayload.name $scanSqlPayload
 
 # 8. Trigger Scan
 runScan $token $sourceSqlPayload.name $scanSqlPayload.name
+
+
+# 10. Create a Source (ADLS Gen2)
+$sourceAdlsPayload = @{
+    id = "datasources/AzureDataLakeStorage"
+    kind = "AdlsGen2"
+    name = "AzureDataLakeStorage"
+    properties = @{
+        collection = @{
+            referenceName = $collectionMarketingName
+            type = 'CollectionReference'
+        }
+        location = $location
+        endpoint = "https://${storageAccountName}.dfs.core.windows.net/"
+        resourceGroup = $resourceGroupName
+        resourceName = $storageAccountName
+        subscriptionId = $subscription_id
+    }
+}
+putSource $token $sourceAdlsPayload
+
+# 11. Create a Scan Configuration
+$randomId = -join (((48..57)+(65..90)+(97..122)) * 80 |Get-Random -Count 3 |ForEach-Object{[char]$_})
+$scanName = "Scan-${randomId}"
+$scanAdlsPayload = @{
+    kind = "AdlsGen2Msi"
+    name = $scanName
+    properties = @{
+        scanRulesetName = "AdlsGen2"
+        scanRulesetType = "System"
+        collection = @{
+            type = "CollectionReference"
+            referenceName = $collectionMarketingName
+        }
+    }
+}
+putScan $token $sourceAdlsPayload.name $scanAdlsPayload
+
+# 12. Trigger Scan
+runScan $token $sourceAdlsPayload.name $scanAdlsPayload.name

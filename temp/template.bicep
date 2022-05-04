@@ -18,6 +18,7 @@ var sqlSecretName = 'abc'
 var vaultUri = 'https://pvdemo6uqbt-keyvault.vault.azure.net/'
 var sqlServerName = 'mysqlserver'
 var sqlDatabaseName = 'mydatabase'
+var storageAccountName = 'mystorageaccount'
 
 // resource pv 'Microsoft.Purview/accounts@2021-07-01' = {
 //   name: 'pvdemo${guid1}-pv'
@@ -56,8 +57,8 @@ resource script 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   kind: 'AzurePowerShell'
   properties: {
     azPowerShellVersion: '7.2'
-    arguments: '-subscriptionId ${subscriptionId} -resourceGroupName ${resourceGroupName} -accountName ${purviewAccount.name} -objectId ${userAssignedIdentity.properties.principalId} -sqlAdminLogin ${sqlAdminLogin} -sqlSecretName ${sqlSecretName} -vaultUri ${vaultUri} -sqlServerName ${sqlServerName} -location ${location} -sqlDatabaseName ${sqlDatabaseName}'
-    primaryScriptUri: 'https://raw.githubusercontent.com/tayganr/purviewdemo/main/temp/script20.ps1'
+    arguments: '-subscriptionId ${subscriptionId} -resourceGroupName ${resourceGroupName} -accountName ${purviewAccount.name} -objectId ${userAssignedIdentity.properties.principalId} -sqlAdminLogin ${sqlAdminLogin} -sqlSecretName ${sqlSecretName} -vaultUri ${vaultUri} -sqlServerName ${sqlServerName} -location ${location} -sqlDatabaseName ${sqlDatabaseName} -storageAccountName ${storageAccountName}'
+    primaryScriptUri: 'https://raw.githubusercontent.com/tayganr/purviewdemo/main/temp/script21.ps1'
     forceUpdateTag: guid(resourceGroup().id)
     retentionInterval: 'PT4H'
   }
