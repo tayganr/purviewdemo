@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.5.6.12127",
-      "templateHash": "15172975583471817591"
+      "templateHash": "15764796724178922015"
     }
   },
   "parameters": {
@@ -31,14 +31,10 @@
     "resourceGroupName": "[resourceGroup().name]",
     "rdPrefix": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions', variables('subscriptionId'))]",
     "role": {
-      "PurviewDataCurator": "[format('{0}/8a3c2885-9b38-4fd2-9d99-91af537c1347', variables('rdPrefix'))]",
-      "PurviewDataReader": "[format('{0}/ff100721-1b9d-43d8-af52-42b69c1272db', variables('rdPrefix'))]",
-      "PurviewDataSourceAdministrator": "[format('{0}/200bba9e-f0c8-430f-892b-6f0794863803', variables('rdPrefix'))]",
-      "StorageBlobDataReader": "[format('{0}/2a2b9908-6ea1-4ae2-8e65-a410df84e7d1', variables('rdPrefix'))]",
-      "StorageBlobDataContributor": "[format('{0}/ba92f5b4-2d11-453d-a403-e96b0029c9fe', variables('rdPrefix'))]",
-      "Contributor": "[format('{0}/b24988ac-6180-42a0-ab88-20f7382dd24c', variables('rdPrefix'))]",
       "Owner": "[format('{0}/8e3af657-a8ff-443c-a75c-2fe8c4bcb635', variables('rdPrefix'))]",
-      "UserAccessAdministrator": "[format('{0}/18d7d88d-d35e-4fb5-a5c3-7773c20a72d9', variables('rdPrefix'))]"
+      "Contributor": "[format('{0}/b24988ac-6180-42a0-ab88-20f7382dd24c', variables('rdPrefix'))]",
+      "StorageBlobDataReader": "[format('{0}/2a2b9908-6ea1-4ae2-8e65-a410df84e7d1', variables('rdPrefix'))]",
+      "StorageBlobDataContributor": "[format('{0}/ba92f5b4-2d11-453d-a403-e96b0029c9fe', variables('rdPrefix'))]"
     },
     "sqlSecretName": "sql-secret",
     "suffix": "[substring(uniqueString(resourceGroup().id, deployment().name), 0, 5)]"

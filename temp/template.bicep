@@ -12,25 +12,14 @@ var subscriptionId = subscription().subscriptionId
 var resourceGroupName = resourceGroup().name
 var rdPrefix = '/subscriptions/${subscriptionId}/providers/Microsoft.Authorization/roleDefinitions'
 var role = {
-  PurviewDataCurator: '${rdPrefix}/8a3c2885-9b38-4fd2-9d99-91af537c1347'
-  PurviewDataReader: '${rdPrefix}/ff100721-1b9d-43d8-af52-42b69c1272db'
-  PurviewDataSourceAdministrator: '${rdPrefix}/200bba9e-f0c8-430f-892b-6f0794863803'
+  Owner: '${rdPrefix}/8e3af657-a8ff-443c-a75c-2fe8c4bcb635'
+  Contributor: '${rdPrefix}/b24988ac-6180-42a0-ab88-20f7382dd24c'
   StorageBlobDataReader: '${rdPrefix}/2a2b9908-6ea1-4ae2-8e65-a410df84e7d1'
   StorageBlobDataContributor: '${rdPrefix}/ba92f5b4-2d11-453d-a403-e96b0029c9fe'
-  Contributor: '${rdPrefix}/b24988ac-6180-42a0-ab88-20f7382dd24c'
-  Owner: '${rdPrefix}/8e3af657-a8ff-443c-a75c-2fe8c4bcb635'
-  UserAccessAdministrator: '${rdPrefix}/18d7d88d-d35e-4fb5-a5c3-7773c20a72d9'
 }
-// var sqlAdminLogin = 'sqladmin'
 var sqlSecretName = 'sql-secret'
-// var vaultUri = 'https://pvdemo6uqbt-keyvault.vault.azure.net/'
-// var sqlServerName = 'pvdemo6uqbt-sqlsvr'
-// var sqlDatabaseName = 'pvdemo6uqbt-sqldb'
-// var storageAccountName = 'pvdemo6uqbtadls'
-// var adfName = 'pvdemo6uqbt-adf'
-// var adfPipelineName = 'copyPipeline'
-// var adfPrincipalId = '3242'
 var suffix = substring(uniqueString(resourceGroup().id, deployment().name),0,5)
+
 
 // Microsoft Purview Account
 resource purviewAccount 'Microsoft.Purview/accounts@2021-07-01' = {
