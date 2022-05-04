@@ -49,6 +49,10 @@ function putVault([string]$access_token, [hashtable]$payload) {
     $keyVaultName = "keyVault-${randomId}"
     $uri = "${pv_endpoint}/scan/azureKeyVaults/${keyVaultName}"
     $body = ($payload | ConvertTo-Json)
+    echo $uri
+    echo $access_token
+    echo $keyVaultName
+    echo $body
     $response = Invoke-WebRequest -Uri $uri -Headers @{Authorization="Bearer $access_token"} -ContentType "application/json" -Method "PUT" -Body $body
     Return $response
 }
