@@ -1,7 +1,7 @@
 // param guid1 string = newGuid()
 var location = resourceGroup().location
 var subscriptionId = subscription().subscriptionId
-var rg = resourceGroup().name
+var resourceGroupName = resourceGroup().name
 var rdPrefix = '/subscriptions/${subscriptionId}/providers/Microsoft.Authorization/roleDefinitions'
 var role = {
   PurviewDataCurator: '${rdPrefix}/8a3c2885-9b38-4fd2-9d99-91af537c1347'
@@ -25,6 +25,10 @@ var role = {
 // }
 
 // User Identity
+resource purviewAccount 'Microsoft.Purview/accounts@2021-07-01' existing = {
+  name: 'pvdemo6uqbt-pv'
+}
+
 resource userAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' existing = {
   name: 'configDeployer'
 }
@@ -46,7 +50,8 @@ resource script 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   kind: 'AzurePowerShell'
   properties: {
     azPowerShellVersion: '7.2'
-    primaryScriptUri: 'https://raw.githubusercontent.com/tayganr/purviewdemo/main/temp/script3.ps1'
+    arguments: '-subscriptionId ${subscriptionId} -resourceGroupName ${resourceGroupName} -accountName ${purviewAccount.name} -objectId ${userAssignedIdentity.properties.principalId}'
+    primaryScriptUri: 'https://raw.githubusercontent.com/tayganr/purviewdemo/main/temp/script4.ps1'
     forceUpdateTag: guid(resourceGroup().id)
     retentionInterval: 'PT4H'
   }

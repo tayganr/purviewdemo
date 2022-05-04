@@ -4,15 +4,14 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.4.613.9944",
-      "templateHash": "5328034611028658282"
+      "version": "0.5.6.12127",
+      "templateHash": "963512680118522011"
     }
   },
-  "functions": [],
   "variables": {
     "location": "[resourceGroup().location]",
     "subscriptionId": "[subscription().subscriptionId]",
-    "rg": "[resourceGroup().name]",
+    "resourceGroupName": "[resourceGroup().name]",
     "rdPrefix": "[format('/subscriptions/{0}/providers/Microsoft.Authorization/roleDefinitions', variables('subscriptionId'))]",
     "role": {
       "PurviewDataCurator": "[format('{0}/8a3c2885-9b38-4fd2-9d99-91af537c1347', variables('rdPrefix'))]",
@@ -33,14 +32,15 @@
       "kind": "AzurePowerShell",
       "properties": {
         "azPowerShellVersion": "7.2",
-        "primaryScriptUri": "https://raw.githubusercontent.com/tayganr/purviewdemo/main/temp/script3.ps1",
+        "arguments": "[format('-subscriptionId {0} -resourceGroupName {1} -accountName {2} -objectId {3}', variables('subscriptionId'), variables('resourceGroupName'), 'pvdemo6uqbt-pv', reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'configDeployer'), '2018-11-30').principalId)]",
+        "primaryScriptUri": "https://raw.githubusercontent.com/tayganr/purviewdemo/main/temp/script4.ps1",
         "forceUpdateTag": "[guid(resourceGroup().id)]",
         "retentionInterval": "PT4H"
       },
       "identity": {
         "type": "UserAssigned",
         "userAssignedIdentities": {
-          "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'configDeployer')]": {}
+          "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'configDeployer'))]": {}
         }
       }
     }
