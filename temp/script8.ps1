@@ -12,14 +12,16 @@ Import-Module Az.Purview
 $pv_endpoint = "https://${accountName}.purview.azure.com"
 
 # [GET] Metadata Policy
-function getMetadataPolicy([string]$token, [string]$collectionName) {
+function getMetadataPolicy([string]$access_token, [string]$collectionName) {
     $uri = "${pv_endpoint}/policystore/collections/${collectionName}/metadataPolicy?api-version=2021-07-01"
+    echo $uri
     $params = @{
         ContentType = "application/json"
-        Headers = @{"Authorization"=$token}
+        Headers = @{"Authorization"="Bearer $access_token"}
         Method = "GET"
         URI = $uri
     }
+    echo $params
     $response = Invoke-RestMethod @params
     Return $response
 }
@@ -40,11 +42,11 @@ function addRoleAssignment([object]$policy, [string]$principalId, [string]$roleN
 }
 
 # [PUT] Metadata Policy
-function putMetadataPolicy([string]$token, [string]$metadataPolicyId, [object]$payload) {
+function putMetadataPolicy([string]$access_token, [string]$metadataPolicyId, [object]$payload) {
     $uri = "${pv_endpoint}/policystore/metadataPolicies/${metadataPolicyId}?api-version=2021-07-01"
     $params = @{
         ContentType = "application/json"
-        Headers = @{"Authorization"=$token}
+        Headers = @{"Authorization"="Bearer $access_token"}
         Body = ($payload | ConvertTo-Json -Depth 10)
         Method = "PUT"
         URI = $uri
@@ -65,6 +67,7 @@ Add-AzPurviewAccountRootCollectionAdmin -AccountName $accountName -ResourceGroup
 $response = Invoke-WebRequest -Uri 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fpurview.azure.net%2F' -Headers @{Metadata="true"}
 $content = $response.Content | ConvertFrom-Json
 $access_token = $content.access_token
+echo $access_token
 
 # Update Root Collection Policy (Add Current User to Built-In Purview Roles)
 $rootCollectionPolicy = getMetadataPolicy $access_token $accountName
