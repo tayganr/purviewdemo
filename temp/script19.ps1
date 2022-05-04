@@ -147,6 +147,39 @@ function putCollection([string]$access_token, [string]$collectionFriendlyName, [
     Return $response.Content | ConvertFrom-Json -Depth 10
 }
 
+# [PUT] Data Source
+function putSource([string]$access_token, [hashtable]$payload) {
+    $dataSourceName = $payload.name
+    $uri = "${pv_endpoint}/scan/datasources/${dataSourceName}?api-version=2018-12-01-preview"
+    $body = ($payload | ConvertTo-Json)
+    $retryCount = 0
+    $response = $null
+    while (($null -eq $response) -and ($retryCount -lt 3)) {
+        try {
+            $response = Invoke-WebRequest -Uri $uri -Headers @{Authorization="Bearer $access_token"} -ContentType "application/json" -Method "PUT" -Body $body
+        }
+        catch {
+            Write-Host "[Error] Unable to putSource."
+            Write-Host "Token: ${token}"
+            Write-Host "URI: ${uri}"
+            Write-Host ($payload | ConvertTo-Json)
+            Write-Host "Response:" $_.Exception.Response
+            Write-Host "Exception:" $_.Exception
+
+            $result = $_.Exception.Response.GetResponseStream()
+            $reader = New-Object System.IO.StreamReader($result)
+            $reader.BaseStream.Position = 0
+            $reader.DiscardBufferedData()
+            $responseBody = $reader.ReadToEnd();
+            Write-Host $responseBody
+
+            $retryCount += 1
+            $response = $null
+        }
+    }
+    Return $response.Content | ConvertFrom-Json -Depth 10
+}
+
 # Add UAMI to Root Collection Admin
 Add-AzPurviewAccountRootCollectionAdmin -AccountName $accountName -ResourceGroupName $resourceGroupName -ObjectId $objectId
 
@@ -208,3 +241,24 @@ $collectionMarketing = putCollection $access_token "Marketing2" $accountName
 $collectionSalesName = $collectionSales.name
 $collectionMarketingName = $collectionMarketing.name
 Start-Sleep 30
+
+# 6. Create a Source (Azure SQL Database)
+$location = "uksouth"
+$sql_server_name = "mysqlserver"
+$source_sqldb_payload = @{
+    id = "datasources/AzureSqlDatabase"
+    kind = "AzureSqlDatabase"
+    name = "AzureSqlDatabase"
+    properties = @{
+        collection = @{
+            referenceName = $collectionSalesName
+            type = 'CollectionReference'
+        }
+        location = $location
+        resourceGroup = $resourceGroupName
+        resourceName = $sql_server_name
+        serverEndpoint = "${sql_server_name}.database.windows.net"
+        subscriptionId = $subscriptionId
+    }
+}
+$sql_source = putSource $access_token $source_sqldb_payload
