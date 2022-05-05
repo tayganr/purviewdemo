@@ -221,8 +221,8 @@ $credentialPayload = @{
 $cred = putCredential $access_token $credentialPayload
 
 # 5. Create Collections (Sales and Marketing)
-$collectionSales = putCollection $access_token "Sales2" $accountName
-$collectionMarketing = putCollection $access_token "Marketing2" $accountName
+$collectionSales = putCollection $access_token "Sales" $accountName
+$collectionMarketing = putCollection $access_token "Marketing" $accountName
 $collectionSalesName = $collectionSales.name
 $collectionMarketingName = $collectionMarketing.name
 Start-Sleep 30
