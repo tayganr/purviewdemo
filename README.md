@@ -4,30 +4,28 @@ This repository includes instructions on how to automate the deployment of a pre
 ## Prerequisites
 
 * An active [Azure subscription](https://azure.microsoft.com/en-us/free/).
-* Sufficient access to create resources and register an application.
 * No **Azure Policies** preventing creation of **Storage accounts** or **Event Hub** namespaces. Purview will deploy a managed Storage account and Event Hub when it is created. If a blocking policy exists and needs to remain in place, please follow the [Purview exception tag guide](https://docs.microsoft.com/en-us/azure/purview/create-purview-portal-faq#create-a-policy-exception-for-purview) to create an exception for Purview accounts.
 
 ## Usage
 
-The pre-deployment script below negates any pre-work required by automatically creating a resource group, service principal, and application secret. These values are then subsequentally fed into the ARM template as parameter values. 
-
-1. **Copy** the PowerShell code snippet below.
-```powershell
-$uri = "https://raw.githubusercontent.com/tayganr/purviewdemo/main/scripts/preDeploymentScript.ps1"
-Invoke-WebRequest $uri -OutFile "preDeploymentScript.ps1"
-./preDeploymentScript.ps1
-  ```
-2. Navigate to the [Azure Portal](https://portal.azure.com), open the **Cloud Shell**.
-![Azure Portal Cloud Shell](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/azure_portal_cloud_shell.png)
-
-3. **Paste** the code snippet and follow the prompts.
-![PowerShell Azure AD Email Address Prompt](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/powershell_email_prompt.png)
+1. Click **Deploy to Azure**.  
+    [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ftayganr%2Fpurviewdemo%2Fmain%2Ftemp%2Ftemplate.json)
+1. Select a **Region**.
+    > Note: If you are planning to create a NEW Resource Group for the set of resources that will be created as part of this template, ensure to select a Region BEFORE creating a new Resource Group (otherwise the Resource Group will be created with the default location).
+1. Select the target **Azure Subscription**.
+1. Select an existing OR create a new **Resource Group**.
+    > Note: If you are selecting an existing Resource Group, this will be automatically set to the existing Resource Group's location.
+1. [OPTIONAL] Change the SQL Server Admin Login.
+1. [OPTIONAL] Change the SQL Server Admin Password.
+    > Note: You do not need to know the password, the post deployment script will automatically store the secret in Key Vault and Purview will use this secret to successfully scan the Azure SQL Database.
 
 ## Outcome
+
 * The template should take approximately 10 minutes to complete.
 * Once complete, all Azure resources will have been provisioned, RBAC assignments applied, and data plane operations executed, see below for more details.
 
 Note: An additional 10 minutes post-deployment may be required for:
+
 * Azure Data Factory pipeline to finish running and push lineage to Azure Purview.
 * Azure Purview to finish scanning registered sources and populate the catalog.
 * The status of these jobs can be monitored within the respective service.
@@ -36,13 +34,13 @@ Note: An additional 10 minutes post-deployment may be required for:
 
 ## Validate Deployment
 
-1. Navigate to the Azure Portal, locate your Resource Group (e.g. `pvdemo-rg-{suffix}`), click Deployments. You should see two deployments that have **Succeded**.
+1. Navigate to the Azure Portal, locate your Resource Group (e.g. `pvdemo-rg-{suffix}`), click Deployments. You should see that the deployment has **Succeded**.
 ![Validate Deployment](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/01validate_deployment.png)
 
 2. Within your resource group, you should see the following set of Azure resources.
 ![Azure Resources](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/02validate_resources.png)
 
-3. Navigate to your Azure Purview Account (e.g. `pvdemo{suffix}-pv`), click Open Purview Studio > Data Map. You should see 3 collections and 2 sources.
+3. Navigate to your Azure Purview Account (e.g. `pvdemo{suffix}-pv`), click Open Governance Portal > Data Map. You should see 3 collections and 2 sources.
 ![Azure Purview Data Map](https://raw.githubusercontent.com/tayganr/purviewdemo/main/images/03validate_datamap.png)
 
 4. Within the **Azure Data Lake Storage Gen2** source, click **View Details**, you should see a scan. Note: The scan may still be in progress and can take up to 10 minutes to complete.
