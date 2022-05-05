@@ -113,7 +113,6 @@ function importGlossaryTerms([string]$access_token, [string]$glossaryGuid, [stri
     $fileStream = [System.IO.File]::OpenRead($filePath)
     $fileContent = New-Object System.Net.Http.StreamContent($fileStream)
     $content.Add($fileContent, $fieldName, $glossaryTermsFilename)
-    $access_token = $access_token.split(" ")[1]
     $client.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", $access_token)
     $result = $client.PostAsync($glossaryImportUri, $content).Result
     return $result
