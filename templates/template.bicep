@@ -1,38 +1,52 @@
 // Parameters
-@description('Please enter your Azure AD Object ID. This can be found by locating your profile within Azure Portal > Azure Active Directory > Users.')
-param azureActiveDirectoryObjectID string       // Azure AD (Current User)
-@description('Please enter your Service Principal Client ID. PowerShell: $(Get-AzureADServicePrincipal -Filter "DisplayName eq \'YOUR_SERVICE_PRINCIPAL_NAME\'").AppId')
-param servicePrincipalClientID string       // CLIENT_ID
-@secure()
-@description('Please enter your Service Principal Client Secret.')
-param servicePrincipalClientSecret string   // CLIENT_SECRET
 @description('Please specify a login name for the Azure SQL Server administrator. Default value: sqladmin.')
 param sqlServerAdminLogin string = 'sqladmin'
 @secure()
 @description('Please specify a password for the Azure SQL Server administrator. Default value: newGuid().')
 param sqlServerAdminPassword string = newGuid()
-param suffix string
 
 // Variables
-var location = resourceGroup().location
 var tenantId = subscription().tenantId
+var location = resourceGroup().location
 var subscriptionId = subscription().subscriptionId
-var rg = resourceGroup().name
-var sqlSecretName = 'sql-secret'
+var resourceGroupName = resourceGroup().name
 var rdPrefix = '/subscriptions/${subscriptionId}/providers/Microsoft.Authorization/roleDefinitions'
 var role = {
-  PurviewDataCurator: '${rdPrefix}/8a3c2885-9b38-4fd2-9d99-91af537c1347'
-  PurviewDataReader: '${rdPrefix}/ff100721-1b9d-43d8-af52-42b69c1272db'
-  PurviewDataSourceAdministrator: '${rdPrefix}/200bba9e-f0c8-430f-892b-6f0794863803'
+  Owner: '${rdPrefix}/8e3af657-a8ff-443c-a75c-2fe8c4bcb635'
+  Contributor: '${rdPrefix}/b24988ac-6180-42a0-ab88-20f7382dd24c'
   StorageBlobDataReader: '${rdPrefix}/2a2b9908-6ea1-4ae2-8e65-a410df84e7d1'
   StorageBlobDataContributor: '${rdPrefix}/ba92f5b4-2d11-453d-a403-e96b0029c9fe'
-  Contributor: '${rdPrefix}/b24988ac-6180-42a0-ab88-20f7382dd24c'
-  UserAccessAdministrator: '${rdPrefix}/18d7d88d-d35e-4fb5-a5c3-7773c20a72d9'
+}
+var sqlSecretName = 'sql-secret'
+var suffix = substring(uniqueString(resourceGroup().id, deployment().name),0,5)
+
+// Purview Account
+resource purviewAccount 'Microsoft.Purview/accounts@2021-07-01' = {
+  name: 'pvdemo${suffix}-pv'
+  location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
+  tags: {
+    resourceByPass: 'allowed'
+  }
 }
 
-// Azure Purview Account
-resource pv 'Microsoft.Purview/accounts@2020-12-01-preview' existing = {
-  name: 'pvdemo${suffix}-pv'
+// Managed Identity
+resource userAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = {
+  name: 'configDeployer'
+  location: location
+}
+
+// Role Assignment: Who: Managed Identity (configDeployer); What: Owner (RBAC role); Scope: Resource Group
+resource roleAssignment 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
+  name: guid('ra01${resourceGroupName}')
+  scope: resourceGroup()
+  properties: {
+    principalId: userAssignedIdentity.properties.principalId
+    roleDefinitionId: role['Owner']
+    principalType: 'ServicePrincipal'
+  }
 }
 
 // Azure SQL Server
@@ -93,7 +107,7 @@ resource kv 'Microsoft.KeyVault/vaults@2021-04-01-preview' = {
     accessPolicies: [
       {
         tenantId: tenantId
-        objectId: azureActiveDirectoryObjectID
+        objectId: userAssignedIdentity.properties.principalId
         permissions:{
           secrets: [
             'get'
@@ -108,7 +122,7 @@ resource kv 'Microsoft.KeyVault/vaults@2021-04-01-preview' = {
       }
       {
         tenantId: tenantId
-        objectId: pv.identity.principalId
+        objectId: purviewAccount.identity.principalId
         permissions: {
           secrets: [
             'get'
@@ -126,7 +140,7 @@ resource kv 'Microsoft.KeyVault/vaults@2021-04-01-preview' = {
   }
 }
 
-// Azure Storage Account
+// Azure Storage Account (ADLS Gen2)
 resource adls 'Microsoft.Storage/storageAccounts@2021-04-01' = {
   name: 'pvdemo${suffix}adls'
   location: location
@@ -137,7 +151,7 @@ resource adls 'Microsoft.Storage/storageAccounts@2021-04-01' = {
   properties: {
     isHnsEnabled: true
   }
-  resource blobService 'blobServices' existing = {
+  resource blobService 'blobServices' = {
     name: 'default'
     resource blobContainer 'containers' = {
       name: 'bing'
@@ -148,12 +162,6 @@ resource adls 'Microsoft.Storage/storageAccounts@2021-04-01' = {
   }
 }
 
-// User Identity
-resource userAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = {
-  name: 'configDeployer'
-  location: location
-}
-
 // Azure Data Factory
 resource adf 'Microsoft.DataFactory/factories@2018-06-01' = {
   name: 'pvdemo${suffix}-adf'
@@ -161,14 +169,14 @@ resource adf 'Microsoft.DataFactory/factories@2018-06-01' = {
   properties: {
     publicNetworkAccess: 'Enabled'
     purviewConfiguration: {
-      purviewResourceId: pv.id
+      purviewResourceId: purviewAccount.id
     }
   }
   identity: {
     type: 'SystemAssigned'
   }
   tags: {
-    catalogUri: '${pv.name}.catalog.purview.azure.com'
+    catalogUri: '${purviewAccount.name}.catalog.purview.azure.com'
   }
   resource linkedServiceStorage 'linkedservices@2018-06-01' = {
     name: 'AzureDataLakeStorageLinkedService'
@@ -296,7 +304,7 @@ resource adf 'Microsoft.DataFactory/factories@2018-06-01' = {
   }
 }
 
-// Default Data Lake Storage Account (Synapse Workspace)
+// Azure Storage Account (ADLS Gen2 - Synapse Workspace)
 resource swsadls 'Microsoft.Storage/storageAccounts@2021-04-01' = {
   name: 'pvdemo${suffix}synapsedl'
   location: location
@@ -323,7 +331,7 @@ resource swsadls 'Microsoft.Storage/storageAccounts@2021-04-01' = {
   }
 }
 
-// Azure Synapse Workspace
+// Azure Synapse Analytics Workspace
 resource sws 'Microsoft.Synapse/workspaces@2021-05-01' = {
   name: 'pvdemo${suffix}-synapse'
   location: location
@@ -333,7 +341,7 @@ resource sws 'Microsoft.Synapse/workspaces@2021-05-01' = {
       filesystem: 'synapsefs${suffix}'
     }
     purviewConfiguration: {
-      purviewResourceId: '/subscriptions/${subscriptionId}/resourceGroups/${rg}/providers/Microsoft.Purview/accounts/${pv.name}'
+      purviewResourceId: '/subscriptions/${subscriptionId}/resourceGroups/${resourceGroupName}/providers/Microsoft.Purview/accounts/${purviewAccount.name}'
     }
   }
   identity: {
@@ -348,31 +356,20 @@ resource sws 'Microsoft.Synapse/workspaces@2021-05-01' = {
   }
 }
 
-// Assign Storage Blob Data Reader RBAC role to Azure Purview MI
+// Role Assignment: Who: Managed Identity (Purview); What: Storage Blob Data Reader (RBAC role); Scope: ADLS Gen2 Storage Account
 resource roleAssignment3 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
-  name: guid('ra03${rg}')
+  name: guid('ra03${resourceGroupName}')
   scope: adls
   properties: {
-    principalId: pv.identity.principalId
+    principalId: purviewAccount.identity.principalId
     roleDefinitionId: role['StorageBlobDataReader']
     principalType: 'ServicePrincipal'
   }
 }
 
-// Assign Contributor RBAC role to User Assigned Identity (configDeployer)
-resource roleAssignment4 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
-  name: guid('ra04${rg}')
-  scope: resourceGroup()
-  properties: {
-    principalId: userAssignedIdentity.properties.principalId
-    roleDefinitionId: role['Contributor']
-    principalType: 'ServicePrincipal'
-  }
-}
-
-// Storage Blob Data Contributor RBAC role to Azure Data Factory MI
+// Role Assignment: Who: Managed Identity (Data Factory); What: Storage Blob Data Contributor (RBAC role); Scope: ADLS Gen2 Storage Account
 resource roleAssignment7 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
-  name: guid('ra07${rg}')
+  name: guid('ra07${resourceGroupName}')
   scope: adls
   properties: {
     principalId: adf.identity.principalId
@@ -381,9 +378,9 @@ resource roleAssignment7 'Microsoft.Authorization/roleAssignments@2020-08-01-pre
   }
 }
 
-// Role Assignment (Synapse Workspace Managed Identity -> Storage Blob Data Contributor)
+// Role Assignment: Who: Managed Identity (Synapse Analytics); What: Storage Blob Data Contributor (RBAC role); Scope: ADLS Gen2 Storage Account (Synapse Workspace)
 resource roleAssignment8 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
-  name: guid('ra08${rg}')
+  name: guid('ra08${resourceGroupName}')
   scope: swsadls
   properties: {
     principalId: sws.identity.principalId
@@ -393,28 +390,27 @@ resource roleAssignment8 'Microsoft.Authorization/roleAssignments@2020-08-01-pre
 }
 
 // Assign Storage Blob Data Reader RBAC role to Current User
-resource roleAssignment9 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
-  name: guid('ra09${rg}')
-  scope: adls
-  properties: {
-    principalId: azureActiveDirectoryObjectID
-    roleDefinitionId: role['StorageBlobDataReader']
-    principalType: 'User'
-  }
-}
+// resource roleAssignment9 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
+//   name: guid('ra09${resourceGroupName}')
+//   scope: adls
+//   properties: {
+//     principalId: azureActiveDirectoryObjectID
+//     roleDefinitionId: role['StorageBlobDataReader']
+//     principalType: 'User'
+//   }
+// }
 
-// Data Plane Operations
+// Post Deployment Script (Data Plane Operations)
 resource script 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   name: 'script'
   location: location
   kind: 'AzurePowerShell'
   properties: {
-    azPowerShellVersion: '3.0'
-    arguments: '-tenant_id ${tenantId} -user_id ${azureActiveDirectoryObjectID} -client_id ${servicePrincipalClientID} -client_secret ${servicePrincipalClientSecret} -purview_account ${pv.name} -vault_uri ${kv.properties.vaultUri} -admin_login ${sqlServerAdminLogin} -sql_secret_name ${sqlSecretName} -subscription_id ${subscriptionId} -resource_group ${rg} -location ${location} -sql_server_name ${sqlsvr.name} -sql_db_name ${sqldb.name} -storage_account_name ${adls.name} -adf_name ${adf.name} -adf_principal_id ${adf.identity.principalId} -adf_pipeline_name ${adf::pipelineCopy.name} -managed_identity ${userAssignedIdentity.properties.principalId}'
-    // scriptContent: loadTextContent('deploymentScript.ps1')
-    primaryScriptUri: 'https://raw.githubusercontent.com/tayganr/purviewdemo/main/scripts/postDeploymentScript.ps1'
+    azPowerShellVersion: '7.2'
+    arguments: '-subscriptionId ${subscriptionId} -resourceGroupName ${resourceGroupName} -accountName ${purviewAccount.name} -objectId ${userAssignedIdentity.properties.principalId} -sqlServerAdminLogin ${sqlServerAdminLogin} -sqlSecretName ${sqlSecretName} -vaultUri ${kv.properties.vaultUri} -sqlServerName ${sqlsvr.name} -location ${location} -sqlDatabaseName ${sqldb.name} -storageAccountName ${adls.name} -adfName ${adf.name} -adfPipelineName ${adf::pipelineCopy.name} -adfPrincipalId ${adf.identity.principalId}'
+    primaryScriptUri: 'https://raw.githubusercontent.com/tayganr/purviewdemo/main/scripts/script.ps1'
     forceUpdateTag: guid(resourceGroup().id)
-    retentionInterval: 'PT4H' // deploymentScript resource will delete itself in 4 hours
+    retentionInterval: 'PT4H'
   }
   identity: {
     type: 'UserAssigned'
@@ -423,7 +419,6 @@ resource script 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
     }
   }
   dependsOn: [
-    adls
-    roleAssignment4
+    roleAssignment
   ]
 }

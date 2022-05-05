@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.5.6.12127",
-      "templateHash": "12669319919622606989"
+      "templateHash": "6003092846567423600"
     }
   },
   "parameters": {
@@ -510,7 +510,7 @@
       "properties": {
         "azPowerShellVersion": "7.2",
         "arguments": "[format('-subscriptionId {0} -resourceGroupName {1} -accountName {2} -objectId {3} -sqlServerAdminLogin {4} -sqlSecretName {5} -vaultUri {6} -sqlServerName {7} -location {8} -sqlDatabaseName {9} -storageAccountName {10} -adfName {11} -adfPipelineName {12} -adfPrincipalId {13}', variables('subscriptionId'), variables('resourceGroupName'), format('pvdemo{0}-pv', variables('suffix')), reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'configDeployer')).principalId, parameters('sqlServerAdminLogin'), variables('sqlSecretName'), reference(resourceId('Microsoft.KeyVault/vaults', format('pvdemo{0}-keyvault', variables('suffix')))).vaultUri, format('pvdemo{0}-sqlsvr', variables('suffix')), variables('location'), format('pvdemo{0}-sqldb', variables('suffix')), format('pvdemo{0}adls', variables('suffix')), format('pvdemo{0}-adf', variables('suffix')), 'copyPipeline', reference(resourceId('Microsoft.DataFactory/factories', format('pvdemo{0}-adf', variables('suffix'))), '2018-06-01', 'full').identity.principalId)]",
-        "primaryScriptUri": "https://raw.githubusercontent.com/tayganr/purviewdemo/main/temp/script.ps1",
+        "primaryScriptUri": "https://raw.githubusercontent.com/tayganr/purviewdemo/main/scripts/script.ps1",
         "forceUpdateTag": "[guid(resourceGroup().id)]",
         "retentionInterval": "PT4H"
       },
