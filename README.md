@@ -9,7 +9,7 @@ This repository includes instructions on how to automate the deployment of a pre
 ## Usage
 
 1. Click **Deploy to Azure**.  
-    [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ftayganr%2Fpurviewdemo%2Fmain%2Ftemp%2Ftemplate.json)
+    [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Ftayganr%2Fpurviewdemo%2Fmain%2Ftemplates%2Ftemplate.json)
 1. Select a **Region**.
     > Note: If you are planning to create a NEW Resource Group for the set of resources that will be created as part of this template, ensure to select a Region BEFORE creating a new Resource Group (otherwise the Resource Group will be created with the default location).
 1. Select the target **Azure Subscription**.
