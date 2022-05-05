@@ -20,8 +20,7 @@ var role = {
 var sqlSecretName = 'sql-secret'
 var suffix = substring(uniqueString(resourceGroup().id, deployment().name),0,5)
 
-
-// Microsoft Purview Account
+// Purview Account
 resource purviewAccount 'Microsoft.Purview/accounts@2021-07-01' = {
   name: 'pvdemo${suffix}-pv'
   location: location
@@ -39,7 +38,7 @@ resource userAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@
   location: location
 }
 
-// Assign Owner RBAC role to User Assigned Identity (configDeployer)
+// Role Assignment: Who: Managed Identity (configDeployer); What: Owner (RBAC role); Scope: Resource Group
 resource roleAssignment 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
   name: guid('ra01${resourceGroupName}')
   scope: resourceGroup()
@@ -141,7 +140,7 @@ resource kv 'Microsoft.KeyVault/vaults@2021-04-01-preview' = {
   }
 }
 
-// Azure Storage Account
+// Azure Storage Account (ADLS Gen2)
 resource adls 'Microsoft.Storage/storageAccounts@2021-04-01' = {
   name: 'pvdemo${suffix}adls'
   location: location
@@ -305,7 +304,7 @@ resource adf 'Microsoft.DataFactory/factories@2018-06-01' = {
   }
 }
 
-// Default Data Lake Storage Account (Synapse Workspace)
+// Azure Storage Account (ADLS Gen2 - Synapse Workspace)
 resource swsadls 'Microsoft.Storage/storageAccounts@2021-04-01' = {
   name: 'pvdemo${suffix}synapsedl'
   location: location
@@ -332,7 +331,7 @@ resource swsadls 'Microsoft.Storage/storageAccounts@2021-04-01' = {
   }
 }
 
-// Azure Synapse Workspace
+// Azure Synapse Analytics Workspace
 resource sws 'Microsoft.Synapse/workspaces@2021-05-01' = {
   name: 'pvdemo${suffix}-synapse'
   location: location
@@ -357,7 +356,7 @@ resource sws 'Microsoft.Synapse/workspaces@2021-05-01' = {
   }
 }
 
-// Assign Storage Blob Data Reader RBAC role to Azure Purview MI
+// Role Assignment: Who: Managed Identity (Purview); What: Storage Blob Data Reader (RBAC role); Scope: ADLS Gen2 Storage Account
 resource roleAssignment3 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
   name: guid('ra03${resourceGroupName}')
   scope: adls
@@ -368,18 +367,7 @@ resource roleAssignment3 'Microsoft.Authorization/roleAssignments@2020-08-01-pre
   }
 }
 
-// Assign Contributor RBAC role to User Assigned Identity (configDeployer)
-resource roleAssignment4 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
-  name: guid('ra04${resourceGroupName}')
-  scope: resourceGroup()
-  properties: {
-    principalId: userAssignedIdentity.properties.principalId
-    roleDefinitionId: role['Contributor']
-    principalType: 'ServicePrincipal'
-  }
-}
-
-// Storage Blob Data Contributor RBAC role to Azure Data Factory MI
+// Role Assignment: Who: Managed Identity (Data Factory); What: Storage Blob Data Contributor (RBAC role); Scope: ADLS Gen2 Storage Account
 resource roleAssignment7 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
   name: guid('ra07${resourceGroupName}')
   scope: adls
@@ -390,7 +378,7 @@ resource roleAssignment7 'Microsoft.Authorization/roleAssignments@2020-08-01-pre
   }
 }
 
-// Role Assignment (Synapse Workspace Managed Identity -> Storage Blob Data Contributor)
+// Role Assignment: Who: Managed Identity (Synapse Analytics); What: Storage Blob Data Contributor (RBAC role); Scope: ADLS Gen2 Storage Account (Synapse Workspace)
 resource roleAssignment8 'Microsoft.Authorization/roleAssignments@2020-08-01-preview' = {
   name: guid('ra08${resourceGroupName}')
   scope: swsadls
@@ -412,7 +400,7 @@ resource roleAssignment8 'Microsoft.Authorization/roleAssignments@2020-08-01-pre
 //   }
 // }
 
-// Post Deployment Script
+// Post Deployment Script (Data Plane Operations)
 resource script 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   name: 'script'
   location: location
@@ -420,7 +408,7 @@ resource script 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
   properties: {
     azPowerShellVersion: '7.2'
     arguments: '-subscriptionId ${subscriptionId} -resourceGroupName ${resourceGroupName} -accountName ${purviewAccount.name} -objectId ${userAssignedIdentity.properties.principalId} -sqlServerAdminLogin ${sqlServerAdminLogin} -sqlSecretName ${sqlSecretName} -vaultUri ${kv.properties.vaultUri} -sqlServerName ${sqlsvr.name} -location ${location} -sqlDatabaseName ${sqldb.name} -storageAccountName ${adls.name} -adfName ${adf.name} -adfPipelineName ${adf::pipelineCopy.name} -adfPrincipalId ${adf.identity.principalId}'
-    primaryScriptUri: 'https://raw.githubusercontent.com/tayganr/purviewdemo/main/temp/script24.ps1'
+    primaryScriptUri: 'https://raw.githubusercontent.com/tayganr/purviewdemo/main/temp/script25.ps1'
     forceUpdateTag: guid(resourceGroup().id)
     retentionInterval: 'PT4H'
   }

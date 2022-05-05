@@ -1,18 +1,18 @@
 param(
-    [string]$subscriptionId,
-    [string]$resourceGroupName,
     [string]$accountName,
-    [string]$objectId,
-    [string]$sqlServerAdminLogin,
-    [string]$sqlSecretName,
-    [string]$vaultUri,
-    [string]$sqlServerName,
-    [string]$location,
-    [string]$sqlDatabaseName,
-    [string]$storageAccountName,
-    [string]$adfPrincipalId,
     [string]$adfName,
-    [string]$adfPipelineName
+    [string]$adfPipelineName,
+    [string]$adfPrincipalId,
+    [string]$location,
+    [string]$objectId,
+    [string]$resourceGroupName,
+    [string]$sqlDatabaseName,
+    [string]$sqlSecretName,
+    [string]$sqlServerAdminLogin,
+    [string]$sqlServerName,
+    [string]$storageAccountName,
+    [string]$subscriptionId,
+    [string]$vaultUri
 )
 
 Install-Module Az.Purview -Force
@@ -176,23 +176,19 @@ $response = Invoke-WebRequest -Uri 'http://169.254.169.254/metadata/identity/oau
 $content = $response.Content | ConvertFrom-Json
 $access_token = $content.access_token
 
-# Update Root Collection Policy (Add Current User to Built-In Purview Roles)
+# 1. Update Root Collection Policy (Add Current User to Built-In Purview Roles)
 $rootCollectionPolicy = getMetadataPolicy $access_token $accountName
 addRoleAssignment $rootCollectionPolicy $objectId "data-curator"
 addRoleAssignment $rootCollectionPolicy $objectId "data-source-administrator"
 addRoleAssignment $rootCollectionPolicy $adfPrincipalId "data-curator"
 $updatedPolicy = putMetadataPolicy $access_token $rootCollectionPolicy.id $rootCollectionPolicy
 
-# Refresh Access Token
+# 2. Refresh Access Token
 $response = Invoke-WebRequest -Uri 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fpurview.azure.net%2F' -Headers @{Metadata="true"}
 $content = $response.Content | ConvertFrom-Json
 $access_token = $content.access_token
 
-# # Get Glossary
-# $response = Invoke-WebRequest -Uri "https://${accountName}.purview.azure.com/catalog/api/atlas/v2/glossary" -Headers @{Authorization="Bearer $access_token"}
-# $content = $response.Content | ConvertFrom-Json
-
-# 2. Create a Key Vault Connection
+# 3. Create a Key Vault Connection
 $vaultPayload = @{
     properties = @{
         baseUrl = $vaultUri
@@ -201,7 +197,7 @@ $vaultPayload = @{
 }
 $vault = putVault $access_token $vaultPayload
 
-# 3. Create a Credential
+# 4. Create a Credential
 $credentialPayload = @{
     name = "sql-cred"
     properties = @{
@@ -276,6 +272,14 @@ $scan1 = putScan $access_token $sourceSqlPayload.name $scanSqlPayload
 # 8. Trigger Scan
 $run1 = runScan $access_token $sourceSqlPayload.name $scanSqlPayload.name
 
+# 9. Load Storage Account with Sample Data
+$containerName = "bing"
+$storageAccount = Get-AzStorageAccount -ResourceGroupName $resourceGroupName -Name $storageAccountName
+$RepoUrl = 'https://api.github.com/repos/microsoft/BingCoronavirusQuerySet/zipball/master'
+Invoke-RestMethod -Uri $RepoUrl -OutFile "${containerName}.zip"
+Expand-Archive -Path "${containerName}.zip"
+Set-Location -Path "${containerName}"
+Get-ChildItem -File -Recurse | Set-AzStorageBlobContent -Container ${containerName} -Context $storageAccount.Context
 
 # 10. Create a Source (ADLS Gen2)
 $sourceAdlsPayload = @{
