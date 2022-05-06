@@ -21,11 +21,34 @@ Import-Module Az.Purview
 # Variables
 $pv_endpoint = "https://${accountName}.purview.azure.com"
 
+function invokeWeb([string]$uri, [string]$access_token, [string]$method, [string]$body) { 
+    $retryCount = 0
+    $response = $null
+    while (($null -eq $response) -and ($retryCount -lt 3)) {
+        try {
+            $response = Invoke-WebRequest -Uri $uri -Headers @{Authorization="Bearer $access_token"} -ContentType "application/json" -Method $method -Body $body
+        }
+        catch {
+            Write-Host "[Error]"
+            Write-Host "Token: ${access_token}"
+            Write-Host "URI: ${uri}"
+            Write-Host "Method: ${method}"
+            Write-Host "Body: ${body}"
+            Write-Host "Response:" $_.Exception.Response
+            Write-Host "Exception:" $_.Exception
+            $retryCount += 1
+            $response = $null
+            Start-Sleep 3
+        }
+    }
+    Return $response.Content | ConvertFrom-Json -Depth 10
+}
+
 # [GET] Metadata Policy
 function getMetadataPolicy([string]$access_token, [string]$collectionName) {
     $uri = "${pv_endpoint}/policystore/collections/${collectionName}/metadataPolicy?api-version=2021-07-01"
-    $response = Invoke-WebRequest -Uri $uri -Headers @{Authorization="Bearer $access_token"} -ContentType "application/json" -Method "GET"
-    Return $response.Content | ConvertFrom-Json -Depth 10
+    $response = invokeWeb $uri $access_token "GET" $null
+    Return $response
 }
 
 # Modify Metadata Policy
@@ -47,8 +70,9 @@ function addRoleAssignment([object]$policy, [string]$principalId, [string]$roleN
 function putMetadataPolicy([string]$access_token, [string]$metadataPolicyId, [object]$payload) {
     $uri = "${pv_endpoint}/policystore/metadataPolicies/${metadataPolicyId}?api-version=2021-07-01"
     $body = ($payload | ConvertTo-Json -Depth 10)
-    $response = Invoke-WebRequest -Uri $uri -Headers @{Authorization="Bearer $access_token"} -ContentType "application/json" -Method "PUT" -Body $body
-    Return $response.Content | ConvertFrom-Json -Depth 10
+    $response = invokeWeb $uri $access_token "PUT" $body
+    Return $response
+
 }
 
 # [PUT] Key Vault
@@ -57,8 +81,8 @@ function putVault([string]$access_token, [hashtable]$payload) {
     $keyVaultName = "keyVault-${randomId}"
     $uri = "${pv_endpoint}/scan/azureKeyVaults/${keyVaultName}"
     $body = ($payload | ConvertTo-Json)
-    $response = Invoke-WebRequest -Uri $uri -Headers @{Authorization="Bearer $access_token"} -ContentType "application/json" -Method "PUT" -Body $body
-    Return $response.Content | ConvertFrom-Json -Depth 10
+    $response = invokeWeb $uri $access_token "PUT" $body
+    Return $response
 }
 
 # [PUT] Credential
@@ -66,8 +90,8 @@ function putCredential([string]$access_token, [hashtable]$payload) {
     $credentialName = $payload.name
     $uri = "${pv_endpoint}/proxy/credentials/${credentialName}?api-version=2020-12-01-preview"
     $body = ($payload | ConvertTo-Json -Depth 9)
-    $response = Invoke-WebRequest -Uri $uri -Headers @{Authorization="Bearer $access_token"} -ContentType "application/json" -Method "PUT" -Body $body
-    Return $response.Content | ConvertFrom-Json -Depth 10
+    $response = invokeWeb $uri $access_token "PUT" $body
+    Return $response
 }
 
 # [PUT] Scan
@@ -75,8 +99,8 @@ function putScan([string]$access_token, [string]$dataSourceName, [hashtable]$pay
     $scanName = $payload.name
     $uri = "${pv_endpoint}/scan/datasources/${dataSourceName}/scans/${scanName}"
     $body = ($payload | ConvertTo-Json -Depth 9)
-    $response = Invoke-WebRequest -Uri $uri -Headers @{Authorization="Bearer $access_token"} -ContentType "application/json" -Method "PUT" -Body $body
-    Return $response.Content | ConvertFrom-Json -Depth 10
+    $response = invokeWeb $uri $access_token "PUT" $body
+    Return $response
 }
 
 # [PUT] Run Scan
@@ -84,8 +108,8 @@ function runScan([string]$access_token, [string]$datasourceName, [string]$scanNa
     $uri = "${pv_endpoint}/scan/datasources/${datasourceName}/scans/${scanName}/run?api-version=2018-12-01-preview"
     $payload = @{ scanLevel = "Full" }
     $body = ($payload | ConvertTo-Json)
-    $response = Invoke-WebRequest -Uri $uri -Headers @{Authorization="Bearer $access_token"} -ContentType "application/json" -Method "POST" -Body $body
-    Return $response.Content | ConvertFrom-Json -Depth 10
+    $response = invokeWeb $uri $access_token "POST" $body
+    Return $response
 }
 
 # [POST] Create Glossary
@@ -96,8 +120,8 @@ function createGlossary([string]$access_token) {
         qualifiedName = "Glossary"
     }
     $body = ($payload | ConvertTo-Json -Depth 4)
-    $response = Invoke-WebRequest -Uri $uri -Headers @{Authorization="Bearer $access_token"} -ContentType "application/json" -Method "POST" -Body $body
-    Return $response.Content | ConvertFrom-Json -Depth 10
+    $response = invokeWeb $uri $access_token "POST" $body
+    Return $response
 }
 
 # [POST] Import Glossary Terms
@@ -131,8 +155,8 @@ function putCollection([string]$access_token, [string]$collectionFriendlyName, [
         "friendlyName" = $collectionFriendlyName
     }
     $body = ($payload | ConvertTo-Json -Depth 10)
-    $response = Invoke-WebRequest -Uri $uri -Headers @{Authorization="Bearer $access_token"} -ContentType "application/json" -Method "PUT" -Body $body
-    Return $response.Content | ConvertFrom-Json -Depth 10
+    $response = invokeWeb $uri $access_token "PUT" $body
+    Return $response
 }
 
 # [PUT] Data Source
@@ -140,32 +164,8 @@ function putSource([string]$access_token, [hashtable]$payload) {
     $dataSourceName = $payload.name
     $uri = "${pv_endpoint}/scan/datasources/${dataSourceName}?api-version=2018-12-01-preview"
     $body = ($payload | ConvertTo-Json)
-    $retryCount = 0
-    $response = $null
-    while (($null -eq $response) -and ($retryCount -lt 3)) {
-        try {
-            $response = Invoke-WebRequest -Uri $uri -Headers @{Authorization="Bearer $access_token"} -ContentType "application/json" -Method "PUT" -Body $body
-        }
-        catch {
-            Write-Host "[Error] Unable to putSource."
-            Write-Host "Token: ${token}"
-            Write-Host "URI: ${uri}"
-            Write-Host ($payload | ConvertTo-Json)
-            Write-Host "Response:" $_.Exception.Response
-            Write-Host "Exception:" $_.Exception
-
-            $result = $_.Exception.Response.GetResponseStream()
-            $reader = New-Object System.IO.StreamReader($result)
-            $reader.BaseStream.Position = 0
-            $reader.DiscardBufferedData()
-            $responseBody = $reader.ReadToEnd();
-            Write-Host $responseBody
-
-            $retryCount += 1
-            $response = $null
-        }
-    }
-    Return $response.Content | ConvertFrom-Json -Depth 10
+    $response = invokeWeb $uri $access_token "PUT" $body
+    Return $response
 }
 
 # Add UAMI to Root Collection Admin
