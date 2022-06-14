@@ -1,5 +1,5 @@
-# Azure Purview Demo Environment
-This repository includes instructions on how to automate the deployment of a pre-populated Azure Purview demo environment.
+# Microsoft Purview Demo Environment
+This repository includes instructions on how to automate the deployment of a pre-populated Microsoft Purview demo environment.
 
 ## Prerequisites
 
