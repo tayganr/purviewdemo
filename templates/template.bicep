@@ -150,6 +150,7 @@ resource adls 'Microsoft.Storage/storageAccounts@2021-04-01' = {
   }
   properties: {
     isHnsEnabled: true
+    allowBlobPublicAccess: true
   }
   resource blobService 'blobServices' = {
     name: 'default'

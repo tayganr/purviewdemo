@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.5.6.12127",
-      "templateHash": "6003092846567423600"
+      "version": "0.24.24.22086",
+      "templateHash": "12930422884731933056"
     }
   },
   "parameters": {
@@ -17,7 +17,7 @@
       }
     },
     "sqlServerAdminPassword": {
-      "type": "secureString",
+      "type": "securestring",
       "defaultValue": "[newGuid()]",
       "metadata": {
         "description": "Please specify a password for the Azure SQL Server administrator. Default value: newGuid()."
@@ -101,7 +101,7 @@
       "properties": {
         "type": "AzureBlobFS",
         "typeProperties": {
-          "url": "[reference(resourceId('Microsoft.Storage/storageAccounts', format('pvdemo{0}adls', variables('suffix')))).primaryEndpoints.dfs]"
+          "url": "[reference(resourceId('Microsoft.Storage/storageAccounts', format('pvdemo{0}adls', variables('suffix'))), '2021-04-01').primaryEndpoints.dfs]"
         }
       },
       "dependsOn": [
@@ -294,7 +294,7 @@
       "apiVersion": "2020-08-01-preview",
       "name": "[guid(format('ra01{0}', variables('resourceGroupName')))]",
       "properties": {
-        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'configDeployer')).principalId]",
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'configDeployer'), '2018-11-30').principalId]",
         "roleDefinitionId": "[variables('role').Owner]",
         "principalType": "ServicePrincipal"
       },
@@ -349,7 +349,7 @@
         "accessPolicies": [
           {
             "tenantId": "[variables('tenantId')]",
-            "objectId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'configDeployer')).principalId]",
+            "objectId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'configDeployer'), '2018-11-30').principalId]",
             "permissions": {
               "secrets": [
                 "get",
@@ -389,7 +389,8 @@
         "name": "Standard_LRS"
       },
       "properties": {
-        "isHnsEnabled": true
+        "isHnsEnabled": true,
+        "allowBlobPublicAccess": true
       }
     },
     {
@@ -509,7 +510,7 @@
       "kind": "AzurePowerShell",
       "properties": {
         "azPowerShellVersion": "7.2",
-        "arguments": "[format('-subscriptionId {0} -resourceGroupName {1} -accountName {2} -objectId {3} -sqlServerAdminLogin {4} -sqlSecretName {5} -vaultUri {6} -sqlServerName {7} -location {8} -sqlDatabaseName {9} -storageAccountName {10} -adfName {11} -adfPipelineName {12} -adfPrincipalId {13}', variables('subscriptionId'), variables('resourceGroupName'), format('pvdemo{0}-pv', variables('suffix')), reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'configDeployer')).principalId, parameters('sqlServerAdminLogin'), variables('sqlSecretName'), reference(resourceId('Microsoft.KeyVault/vaults', format('pvdemo{0}-keyvault', variables('suffix')))).vaultUri, format('pvdemo{0}-sqlsvr', variables('suffix')), variables('location'), format('pvdemo{0}-sqldb', variables('suffix')), format('pvdemo{0}adls', variables('suffix')), format('pvdemo{0}-adf', variables('suffix')), 'copyPipeline', reference(resourceId('Microsoft.DataFactory/factories', format('pvdemo{0}-adf', variables('suffix'))), '2018-06-01', 'full').identity.principalId)]",
+        "arguments": "[format('-subscriptionId {0} -resourceGroupName {1} -accountName {2} -objectId {3} -sqlServerAdminLogin {4} -sqlSecretName {5} -vaultUri {6} -sqlServerName {7} -location {8} -sqlDatabaseName {9} -storageAccountName {10} -adfName {11} -adfPipelineName {12} -adfPrincipalId {13}', variables('subscriptionId'), variables('resourceGroupName'), format('pvdemo{0}-pv', variables('suffix')), reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'configDeployer'), '2018-11-30').principalId, parameters('sqlServerAdminLogin'), variables('sqlSecretName'), reference(resourceId('Microsoft.KeyVault/vaults', format('pvdemo{0}-keyvault', variables('suffix'))), '2021-04-01-preview').vaultUri, format('pvdemo{0}-sqlsvr', variables('suffix')), variables('location'), format('pvdemo{0}-sqldb', variables('suffix')), format('pvdemo{0}adls', variables('suffix')), format('pvdemo{0}-adf', variables('suffix')), 'copyPipeline', reference(resourceId('Microsoft.DataFactory/factories', format('pvdemo{0}-adf', variables('suffix'))), '2018-06-01', 'full').identity.principalId)]",
         "primaryScriptUri": "https://raw.githubusercontent.com/tayganr/purviewdemo/main/scripts/script.ps1",
         "forceUpdateTag": "[guid(resourceGroup().id)]",
         "retentionInterval": "PT4H"
